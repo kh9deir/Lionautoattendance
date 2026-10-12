@@ -10,6 +10,66 @@
 .pdf-panel{margin:0 0 16px}.pdf-upload-actions{display:flex;justify-content:center;gap:9px;flex-wrap:wrap}.pdf-status{border:1px solid var(--line);border-radius:10px;background:#f8fafc;color:var(--muted);padding:12px 14px;font-size:13px;line-height:1.7;margin:12px 0}.pdf-status[data-state="loading"]{background:#eef3ff;border-color:#cddaff;color:#214cae}.pdf-status[data-state="success"]{background:#e8f7f0;border-color:#b6e5d2;color:#08724e}.pdf-status[data-state="error"]{background:#fff0f0;border-color:#efc3c6;color:#9c2b35}.pdf-result[hidden]{display:none}.pdf-summary{display:grid;gap:8px;margin:14px 0}.pdf-summary-card{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff;font-size:13px;line-height:1.8}.pdf-summary-card.warning{background:#fff8e8;border-color:#f1dfad;color:#765515}.pdf-pages{display:grid;gap:12px}.pdf-page{border:1px solid var(--line);border-radius:12px;background:#fff;padding:14px;min-width:0}.pdf-page-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px}.pdf-page h3{font-size:14px;margin:0}.pdf-page-meta{color:var(--muted);font-size:12px}.pdf-page details{border-top:1px solid var(--line);padding-top:10px;margin-top:10px}.pdf-page summary{cursor:pointer;font-size:12px;font-weight:700}.pdf-record-lines{margin:10px 0 0;padding:0 24px 0 0;display:grid;gap:7px}.pdf-record-lines li{font-size:12px;line-height:1.7;overflow-wrap:anywhere}.pdf-page-text{text-align:start;unicode-bidi:plaintext;white-space:pre-wrap;overflow-wrap:anywhere;max-height:360px;overflow:auto;background:#f8fafc;border-radius:9px;padding:12px;margin:10px 0 0;font:12px/1.8 Consolas,"Courier New",monospace}.pdf-review-note{font-size:12px;line-height:1.8;color:var(--muted);margin:8px 0 0}
 </style>
 <style>@media(max-width:700px){.app{grid-template-columns:minmax(0,1fr)}.sidebar,.main,.section,.top,.actions{min-width:0}.nav{min-width:0;max-width:100%}}</style>
+<style>
+/* Lion Auto dark theme: charcoal surfaces with restrained dark-gold accents. */
+:root{color-scheme:dark;--bg:#111214;--panel:#1a1b1e;--ink:#f1eee7;--muted:#b1ada3;--line:#37383a;--nav:#0b0c0e;--blue:#987638;--teal:#65ad98;--amber:#c39a50}
+body{background:var(--bg);color:var(--ink)}
+button,input,select{color:var(--ink)}
+button{border-color:var(--line)}
+.app{background:var(--bg)}
+.sidebar{background:var(--nav);color:#f3eee2;border-left:1px solid #282621}
+.brand{color:#f1d99b}
+.subbrand,.side-note,.top p,.eyebrow,.small,.section-intro,.footnote,.subcell,.pdf-page-meta{color:var(--muted)}
+.side-note{border-color:#403a2c;background:#111214}
+.nav button{color:#d0ccc3}
+.nav button.active,.nav button:hover{background:#322817;color:#f1d99b;box-shadow:inset -2px 0 #a38342}
+.main{background:var(--bg)}
+.top h1,.panel h2,.modal-box h2{color:var(--ink)}
+.primary{background:#8e6e32;color:#fff8e9;border-color:#a18449}
+.primary:hover{background:#a17e3b}
+.secondary{background:#302719;color:#e4c985;border-color:#66532e}
+.plain{background:#202124;color:#e6d39e;border-color:#514630}
+.cards .card,.card,.panel,.modal-box{background:var(--panel);color:var(--ink);border-color:var(--line);box-shadow:0 8px 24px #0003}
+.icon{background:#302719;color:#e2c47e}
+.metric{color:var(--ink)}
+.good,.status.ok,.pill.green{background:#193129;color:#8bd2b4;border-color:#315544}
+.warn,.status.review,.pill{background:#352b19;color:#e2c47e;border-color:#66532e}
+.bad,.status.missing,.pill.red{background:#3a2223;color:#f0a5a5;border-color:#67393a}
+.bar{background:#292a2c}
+.bar span{background:#947538}
+.barrow:nth-of-type(3) .bar span{background:#6c9b82}
+.barrow:nth-of-type(4) .bar span{background:#b17a55}
+.activity-item,.section{border-color:var(--line)}
+.dot{background:#947538}
+.dot.amber{background:#c69d50}
+.dot.red{background:#cf7373}
+.toolbar input,.toolbar select,.field input,.field select{background:#202124;color:var(--ink);border-color:#494a4c}
+.toolbar input::placeholder,.field input::placeholder{color:#88857d}
+.table-wrap{border-color:var(--line)}
+table{background:#191a1c;color:var(--ink)}
+th{background:#242528;color:#d4caa9}
+th,td{border-color:#343538}
+tr:hover td{background:#222326}
+.status.review{background:#352b19;color:#e5c77f}
+.status.ok{background:#193129;color:#91d2b5}
+.status.missing{background:#3a2223;color:#f0aaaa}
+.notice{background:#302819;border-color:#685633;color:#e0c67f}
+.upload{background:#1a1b1e;border-color:#72603a;color:var(--ink)}
+.upload p,.pdf-review-note{color:var(--muted)}
+.pdf-status{background:#202124;border-color:#4b4c4e;color:#dedbd4}
+.pdf-status[data-state="loading"]{background:#302819;border-color:#685633;color:#e1c67f}
+.pdf-status[data-state="success"]{background:#193129;border-color:#315544;color:#91d2b5}
+.pdf-status[data-state="error"]{background:#3a2223;border-color:#67393a;color:#f0aaaa}
+.pdf-summary-card,.pdf-page{background:var(--panel);border-color:var(--line);color:var(--ink)}
+.pdf-summary-card.warning{background:#302819;border-color:#685633;color:#e1c67f}
+.pdf-page details{border-color:var(--line)}
+.pdf-page-text{background:#202124;color:#e7e4dc}
+.modal{background:#0009}
+.toast{background:#26221a;color:#f0e7d1;border:1px solid #5c4b2c}
+#siteList>div{background:#1a1b1e!important;border-color:var(--line)!important;color:var(--ink)}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid #ba9853;outline-offset:2px}
+@media(max-width:760px){.sidebar{border-left:0;border-bottom:1px solid #282621}.nav button.active,.nav button:hover{box-shadow:inset 0 -2px #a38342}}
+</style>
 </head>
 <body><div class="app"><aside class="sidebar"><div class="brand">LION <span style="color:#70a2ff">AUTO</span></div><div class="subbrand">نظام الموارد البشرية والحضور</div><nav class="nav"><button data-page="dashboard">◫ نظرة عامة</button><button class="active" data-page="attendance">◷ سجلات البصمة</button><button data-page="review">⚑ مراجعة الاستثناءات <span id="reviewCount">0</span></button><button data-page="employees">♙ الموظفون</button><button data-page="payroll">▤ الرواتب</button><button data-page="settings">⚙ الإعدادات</button></nav><div class="side-note">🔒 <b>المعاينة مؤقتة</b><br>تُقرأ صفحات الملف الذي تختاره داخل المتصفح، وتُمسح المعاينة عند اختيار ملف آخر أو إغلاق الصفحة.</div></aside>
 <main class="main"><header class="top"><div><div class="eyebrow">الموارد البشرية / الملف الحالي</div><h1 id="pageTitle">سجلات البصمة</h1><p>ارفع ملف PDF لاستخراج الموظفين وحركات الحضور والانصراف إلى الصفحة.</p></div><div class="actions"><button class="plain" onclick="exportCSV()">⇩ تصدير CSV</button><button class="primary" onclick="document.getElementById('pdfInput').click()">＋ اختيار ملف PDF</button><input id="pdfInput" type="file" accept="application/pdf,.pdf" hidden onchange="handlePDF(this.files[0])"></div></header>
