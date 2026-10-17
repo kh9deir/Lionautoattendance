@@ -66,9 +66,9 @@ summary{cursor:pointer;color:var(--gold2)}
 <nav id="nav"></nav><div id="msg"></div><main id="app"></main><dialog id="dlg"></dialog>
 <script>
 const $=s=>document.querySelector(s),K='lionauto_v1',pad=n=>String(n).padStart(2,'0');
-let D={emp:[],att:{},adj:[],set:{grace:10,otMult:0,otMin:30,lateMult:0,absMult:1,div:30,off:5,ins:0,dStart:'09:00',dEnd:'17:00'}};
+let D={emp:[],att:{},adj:[],set:{grace:10,otMult:0,otMin:30,lateMult:1,absMult:1,div:30,off:5,ins:0,dStart:'09:00',dEnd:'17:00'}};
 try{const s=localStorage.getItem(K);if(s)D=Object.assign(D,JSON.parse(s))}catch(e){}
-if(!D.set.v2){D.set.lateMult=0;D.set.otMult=0;D.set.v2=1}
+if(D.set.v2!==2){if(!D.set.v2)D.set.otMult=0;D.set.lateMult=1;D.set.v2=2}
 const save=()=>{try{localStorage.setItem(K,JSON.stringify(D))}catch(e){}};
 const ymd=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
 const tm=t=>{if(!t)return 0;const a=t.split(':');return +a[0]*60+ +a[1]};
@@ -101,9 +101,9 @@ function calc(e,m){
  }
  const a=D.adj.filter(x=>x.emp==e.id&&x.date.startsWith(m)),sum=t=>a.filter(x=>x.type===t).reduce((s,x)=>s+x.amt,0);
  const adv=sum('advance'),cd=sum('deduct'),cb=sum('bonus');
- const dLate=late/60*hr*S.lateMult,oT=ot/60*hr*S.otMult,ins=+e.ins||0,insD=S.insDed?ins:0;
- const tot=pres+lv,days=Math.min(S.div,tot),dedT=cd+dLate,bonT=cb+oT;
- return{pres,lv,tot,abs,daily,days,adv,ins,insD,dedT,bonT,late,ot:ot/60,ded:dedT+adv+insD,add:bonT,net:days*daily+bonT-dedT-adv-insD};
+ const ov=(D.lt||{})[e.id+'|'+m],lm=ov&&ov.m!=null?ov.m:late,dLate=ov&&ov.a!=null?ov.a:lm/60*hr*S.lateMult,oT=ot/60*hr*S.otMult,ins=+e.ins||0,insD=S.insDed?ins:0,lateDone=a.filter(x=>x.auto==='late').reduce((q,x)=>q+x.amt,0);
+ const tot=pres+lv,days=Math.min(S.div,tot),dedT=cd,bonT=cb+oT;
+ return{pres,lv,tot,abs,daily,days,adv,ins,insD,dedT,bonT,late:lm,lateAuto:late,lateOv:!!ov,dLate,lateDone,ot:ot/60,ded:dedT+adv+insD,add:bonT,net:days*daily+bonT-dedT-adv-insD};
 }
 
 const V={
@@ -131,9 +131,9 @@ adj(){
 },
 pay(){
  const m=M(),R_=D.emp.map(e=>[e,calc(e,m)]),s=k=>R_.reduce((a,r)=>a+r[1][k],0),bs=D.emp.reduce((a,e)=>a+e.salary,0);
- const h=['الاسم','الوظيفة','المرتب الأساسي','سلف','تأمينات','يومية','الحضور الفعلي','الحضور + الإجازات المدفوعة','غياب','نقدية خصومات','نقدية مكافآت','صافي المرتب'];
- return `<p class="np"><button class="p" onclick="print()">طباعة كشف المرتبات</button></p><div class="tw"><table><tr>${h.map(x=>`<th>${x}</th>`).join('')}<th class="np"></th></tr>${R_.map(a=>{const e=a[0],r=a[1];return `<tr><td>${esc(e.name)}</td><td>${esc(e.title)}</td><td>${fm(e.salary)}</td><td>${fm(r.adv)}</td><td>${r.ins?fm(r.ins):'-'}</td><td>${fm(r.daily)}</td><td>${r.pres}</td><td>${r.tot}</td><td class="${r.abs?'neg':''}">${r.abs}</td><td>${fm(r.dedT)}</td><td>${fm(r.bonT)}</td><td><b>${fm(r.net)}</b></td><td class="np"><button onclick="slip('${esc(e.id)}')">قسيمة</button></td></tr>`}).join('')}<tfoot><tr><td>الإجمالي</td><td></td><td>${fm(bs)}</td><td>${fm(s('adv'))}</td><td>${fm(s('ins'))}</td><td></td><td>${s('pres')}</td><td>${s('tot')}</td><td>${s('abs')}</td><td>${fm(s('dedT'))}</td><td>${fm(s('bonT'))}</td><td>${fm(s('net'))}</td><td class="np"></td></tr></tfoot></table></div>
- <p class="hint">الصافي = (الحضور + الإجازات المدفوعة) × اليومية − السلف − نقدية الخصومات + نقدية المكافآت. الإجازة الأسبوعية تُحتسب مدفوعة تلقائيًا، وأي إجازة أخرى تُسجَّل من تبويب الحضور بحالة «إجازة مدفوعة». الحساب حتى تاريخ اليوم في الشهر الحالي.</p>`;
+ const h=['الاسم','الوظيفة','المرتب الأساسي','سلف','تأمينات','يومية','الحضور الفعلي','الحضور','غياب','التأخير (د)','خصم التأخير','نقدية خصومات','نقدية مكافآت','صافي المرتب'];
+ return `<p class="np"><button class="p" onclick="runLate()">تنفيذ خصومات التأخير</button> <button class="p" onclick="print()">طباعة كشف المرتبات</button></p><div class="tw"><table><tr>${h.map(x=>`<th>${x}</th>`).join('')}<th class="np"></th></tr>${R_.map(a=>{const e=a[0],r=a[1];return `<tr><td>${esc(e.name)}</td><td>${esc(e.title)}</td><td>${fm(e.salary)}</td><td>${fm(r.adv)}</td><td>${r.ins?fm(r.ins):'-'}</td><td>${fm(r.daily)}</td><td>${r.pres}</td><td>${r.tot}</td><td class="${r.abs?'neg':''}">${r.abs}</td><td class="${r.late?'neg':''}">${r.late}${r.lateOv?' ✎':''}</td><td>${r.lateDone?'<span style="color:var(--ok)">✓ '+fm(r.lateDone)+'</span>':fm(r.dLate)}</td><td>${fm(r.dedT)}</td><td>${fm(r.bonT)}</td><td><b>${fm(r.net)}</b></td><td class="np"><button onclick="editLate('${esc(e.id)}')">تعديل</button><button onclick="slip('${esc(e.id)}')">قسيمة</button></td></tr>`}).join('')}<tfoot><tr><td>الإجمالي</td><td></td><td>${fm(bs)}</td><td>${fm(s('adv'))}</td><td>${fm(s('ins'))}</td><td></td><td>${s('pres')}</td><td>${s('tot')}</td><td>${s('abs')}</td><td>${s('late')}</td><td>${fm(s('dLate'))}</td><td>${fm(s('dedT'))}</td><td>${fm(s('bonT'))}</td><td>${fm(s('net'))}</td><td class="np"></td></tr></tfoot></table></div>
+ <p class="hint">الصافي = أيام الحضور المحتسبة × اليومية − السلف − نقدية الخصومات + نقدية المكافآت. الإجازة الأسبوعية تُحتسب مدفوعة تلقائيًا، وأي إجازة أخرى تُسجَّل من تبويب الحضور بحالة «إجازة مدفوعة». الحساب حتى تاريخ اليوم في الشهر الحالي. التأخير = تأخر الحضور + الانصراف المبكر. زر «تنفيذ خصومات التأخير» يحوّله إلى خصم نقدي (ويمكن إعادة تنفيذه بعد أي تعديل)، وزر «تعديل» يغيّر دقائق التأخير أو قيمة الخصم للموظف.</p>`;
 },
 set(){
  const n=(k,l)=>`<label>${l}<input type="number" step="any" value="${D.set[k]}" onchange="D.set.${k}=+this.value;save()"></label>`,tt=(k,l)=>`<label>${l}<input type="time" value="${D.set[k]}" onchange="D.set.${k}=this.value;save()"></label>`;
@@ -251,6 +251,25 @@ function zkRep(tk){
  });
  save();R();
  msg(`تم الاستيراد: ${ne} موظف جديد و${nd} يوم حضور. الأوقات في التقرير بنظام 12 ساعة بدون صباحًا/مساءً، وتم استنتاجها من ترتيب البصمات. مواعيد الدوام وتاريخ التعيين للموظفين الجدد مُقدّرة من البصمات، والراتب صفر: راجعها.`);
+}
+function editLate(id){
+ const e=E(id),r=calc(e,M()),o=((D.lt||{})[id+'|'+M()]||{});
+ $('#dlg').innerHTML=`<h3>تعديل التأخير — ${esc(e.name)}</h3><p class="hint">الشهر ${M()} — التأخير المحسوب تلقائيًا: ${r.lateAuto} دقيقة</p><div class="g">${inp('lmin','دقائق التأخير','number',r.late)}${inp('lamt','قيمة الخصم (اتركها فارغة للحساب التلقائي)','number',o.a==null?'':o.a)}</div><p class="np"><button class="p" onclick="saveLate('${esc(id)}')">حفظ</button> <button class="p" onclick="saveLate('${esc(id)}',1)">رجوع للتلقائي</button> <button class="p" onclick="dlg.close()">إغلاق</button></p>`;
+ dlg.showModal();
+}
+function saveLate(id,auto){
+ D.lt=D.lt||{};const k=id+'|'+M(),a=$('#lamt').value;
+ if(auto)delete D.lt[k];else D.lt[k]={m:Math.max(0,+$('#lmin').value||0),a:a===''?null:+a};
+ save();dlg.close();R();msg('تم التعديل. اضغط «تنفيذ خصومات التأخير» لتحديث الخصم النقدي.');
+}
+function runLate(){
+ const m=M(),t=ymd(new Date()),y=+m.slice(0,4),mo=+m.slice(5),dt=t.startsWith(m)?t:m+'-'+pad(new Date(y,mo,0).getDate());let c=0;
+ D.emp.forEach(e=>{
+  D.adj=D.adj.filter(x=>!(x.auto==='late'&&x.emp==e.id&&x.date.startsWith(m)));
+  const r=calc(e,m);
+  if(r.dLate>0){D.adj.push({emp:e.id,date:dt,type:'deduct',amt:Math.round(r.dLate*100)/100,note:'خصم تأخير '+r.late+' دقيقة',auto:'late'});c++}
+ });
+ save();R();msg(`تم تنفيذ خصم التأخير لـ ${c} موظف، وأُضيف إلى نقدية الخصومات وإلى تبويب مكافآت وخصومات.`);
 }
 function rest(){try{D=Object.assign({emp:[],att:{},adj:[]},JSON.parse($('#bk').value));save();R();msg('تمت الاستعادة')}catch(e){msg('النص غير صالح')}}
 $('#mon').value=ymd(new Date()).slice(0,7);$('#mon').onchange=R;R();
