@@ -66,8 +66,9 @@ summary{cursor:pointer;color:var(--gold2)}
 <nav id="nav"></nav><div id="msg"></div><main id="app"></main><dialog id="dlg"></dialog>
 <script>
 const $=s=>document.querySelector(s),K='lionauto_v1',pad=n=>String(n).padStart(2,'0');
-let D={emp:[],att:{},adj:[],set:{grace:10,otMult:1.5,otMin:30,lateMult:1,absMult:1,div:30,off:5,ins:0,dStart:'09:00',dEnd:'17:00'}};
+let D={emp:[],att:{},adj:[],set:{grace:10,otMult:0,otMin:30,lateMult:0,absMult:1,div:30,off:5,ins:0,dStart:'09:00',dEnd:'17:00'}};
 try{const s=localStorage.getItem(K);if(s)D=Object.assign(D,JSON.parse(s))}catch(e){}
+if(!D.set.v2){D.set.lateMult=0;D.set.otMult=0;D.set.v2=1}
 const save=()=>{try{localStorage.setItem(K,JSON.stringify(D))}catch(e){}};
 const ymd=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
 const tm=t=>{if(!t)return 0;const a=t.split(':');return +a[0]*60+ +a[1]};
@@ -77,31 +78,32 @@ const E=id=>D.emp.find(e=>e.id==id),M=()=>$('#mon').value;
 const msg=t=>{$('#msg').textContent=t};
 const opts=()=>D.emp.map(e=>`<option value="${esc(e.id)}">${esc(e.name)} (${esc(e.id)})</option>`).join('');
 const inp=(id,l,t='text',v='')=>`<label>${l}<input id="${id}" type="${t}" value="${esc(v)}"></label>`;
-const ST={present:'حاضر',absent:'غياب',leave:'إجازة'};
+const ST={present:'حاضر',absent:'غياب',leave:'إجازة مدفوعة',half:'نصف يوم'};
 const T=[['home','الرئيسية'],['emp','الموظفون'],['att','الحضور والانصراف'],['adj','مكافآت وخصومات'],['pay','المرتبات'],['set','الإعدادات']];
 let tab='home',fe='';
 
 function calc(e,m){
  const S=D.set,p=m.split('-').map(Number),n=new Date(p[0],p[1],0).getDate(),today=ymd(new Date());
  const en=tm(e.end)+(tm(e.end)<=tm(e.start)?1440:0),daily=e.salary/S.div,hr=daily/Math.max(1,(en-tm(e.start))/60);
- let pres=0,abs=0,late=0,ot=0;
+ let pres=0,abs=0,lv=0,late=0,ot=0;
  for(let d=1;d<=n;d++){
   const dt=m+'-'+pad(d),wd=new Date(p[0],p[1]-1,d).getDay(),r=D.att[e.id+'|'+dt];
-  if(e.hd&&dt<e.hd)continue;
-  if(r&&r.st==='leave')continue;
+  if(dt>today||(e.hd&&dt<e.hd))continue;
+  if(r&&r.st==='leave'){lv++;continue}
   if(r&&r.st==='absent'){abs++;continue}
-  if(r&&(r.in||r.st==='present')){
+  if(r&&r.st==='half'){pres+=.5;abs+=.5;continue}
+  if(r&&(r.in||r.out||r.st==='present')){
    pres++;
    if(r.in){const l=tm(r.in)-tm(e.start);if(l>S.grace)late+=l}
    if(r.out){const o=tm(r.out)+(r.nx?1440:0);late+=Math.max(0,en-o);const x=o-en;if(x>=S.otMin)ot+=x}
-  }else if(wd!==S.off&&dt<today)abs++;
+  }else if(wd===S.off)lv++;
+  else if(dt<today)abs++;
  }
- const a=D.adj.filter(x=>x.emp==e.id&&x.date.startsWith(m));
- const sum=t=>a.filter(x=>x.type===t).reduce((s,x)=>s+x.amt,0);
- const bon=sum('bonus'),man=sum('deduct')+sum('advance');
- const dLate=late/60*hr*S.lateMult,dAbs=abs*daily*S.absMult,oT=ot/60*hr*S.otMult,ins=e.salary*S.ins/100;
- const ded=dLate+dAbs+man+ins,add=oT+bon;
- return{pres,abs,late,ot:ot/60,bon,man,dLate,dAbs,oT,ins,ded,add,net:e.salary+add-ded};
+ const a=D.adj.filter(x=>x.emp==e.id&&x.date.startsWith(m)),sum=t=>a.filter(x=>x.type===t).reduce((s,x)=>s+x.amt,0);
+ const adv=sum('advance'),cd=sum('deduct'),cb=sum('bonus');
+ const dLate=late/60*hr*S.lateMult,oT=ot/60*hr*S.otMult,ins=+e.ins||0,insD=S.insDed?ins:0;
+ const tot=pres+lv,days=Math.min(S.div,tot),dedT=cd+dLate,bonT=cb+oT;
+ return{pres,lv,tot,abs,daily,days,adv,ins,insD,dedT,bonT,late,ot:ot/60,ded:dedT+adv+insD,add:bonT,net:days*daily+bonT-dedT-adv-insD};
 }
 
 const V={
@@ -112,13 +114,13 @@ home(){
  +(D.emp.length?'':'<p class="hint">ابدأ بإضافة الموظفين من تبويب «الموظفون»، أو استورد ملف ZKTeco مباشرة.</p>');
 },
 emp(){
- return `<div class="box"><h3>إضافة / تعديل موظف</h3><div class="g">${inp('eid','كود الموظف (نفس ID في ZKTeco)')}${inp('enm','الاسم')}${inp('edp','القسم')}${inp('ejb','الوظيفة')}${inp('esl','الراتب الأساسي','number')}${inp('est','بداية الدوام','time',D.set.dStart)}${inp('een','نهاية الدوام','time',D.set.dEnd)}${inp('ehd','تاريخ التعيين','date')}</div>
+ return `<div class="box"><h3>إضافة / تعديل موظف</h3><div class="g">${inp('eid','كود الموظف (نفس ID في ZKTeco)')}${inp('enm','الاسم')}${inp('edp','القسم')}${inp('ejb','الوظيفة')}${inp('esl','الراتب الأساسي','number')}${inp('eis','تأمينات (مبلغ شهري)','number')}${inp('est','بداية الدوام','time',D.set.dStart)}${inp('een','نهاية الدوام','time',D.set.dEnd)}${inp('ehd','تاريخ التعيين','date')}</div>
  <button class="p" onclick="saveE()">حفظ الموظف</button> <label class="b" style="display:inline-block;color:var(--onb)">استيراد من ZKTeco (موظفين / حضور)<input type="file" hidden accept=".pdf,.csv,.txt,.dat,.xls,.xlsx" onchange="imp(this.files[0])"></label><details style="margin-top:10px"><summary>لو تقرير PDF لم يُقرأ: الصق نص التقرير هنا</summary><textarea id="zt" rows="4" style="width:100%"></textarea><button class="p" onclick="zkPaste()">استيراد النص</button></details></div>
  <div class="tw"><table><tr><th>الكود</th><th>الاسم</th><th>القسم</th><th>الوظيفة</th><th>الراتب</th><th>الدوام</th><th></th></tr>${D.emp.map(e=>`<tr><td>${esc(e.id)}</td><td>${esc(e.name)}</td><td>${esc(e.dept)}</td><td>${esc(e.title)}</td><td class="${e.salary?'':'neg'}">${fm(e.salary)}</td><td>${e.start} - ${e.end}</td><td><button onclick="editE('${esc(e.id)}')">تعديل</button><button class="x" onclick="delE('${esc(e.id)}')">حذف</button></td></tr>`).join('')||'<tr><td colspan="7" class="hint">لا يوجد موظفون بعد</td></tr>'}</table></div>`;
 },
 att(){
  const m=M(),keys=Object.keys(D.att).filter(k=>k.split('|')[1].startsWith(m)&&(!fe||k.split('|')[0]==fe)).sort((a,b)=>b.split('|')[1].localeCompare(a.split('|')[1]));
- return `<div class="box"><h3>تسجيل حضور يدوي</h3><div class="g"><label>الموظف<select id="aemp">${opts()}</select></label>${inp('adt','التاريخ','date',ymd(new Date()))}${inp('ain','حضور','time')}${inp('aout','انصراف','time')}<label>الحالة<select id="ast"><option value="present">حاضر</option><option value="absent">غياب</option><option value="leave">إجازة مدفوعة</option></select></label></div><button class="p" onclick="saveA()">حفظ</button></div>
+ return `<div class="box"><h3>تسجيل حضور يدوي</h3><div class="g"><label>الموظف<select id="aemp">${opts()}</select></label>${inp('adt','التاريخ','date',ymd(new Date()))}${inp('ain','حضور','time')}${inp('aout','انصراف','time')}<label>الحالة<select id="ast"><option value="present">حاضر</option><option value="absent">غياب</option><option value="leave">إجازة مدفوعة</option><option value="half">نصف يوم</option></select></label></div><button class="p" onclick="saveA()">حفظ</button></div>
  <label style="max-width:300px;margin-bottom:10px">تصفية بالموظف<select onchange="fe=this.value;R()"><option value="">الكل</option>${opts().replace('value="'+fe+'"','value="'+fe+'" selected')}</select></label>
  <div class="tw"><table><tr><th>التاريخ</th><th>الموظف</th><th>حضور</th><th>انصراف</th><th>تأخير (د)</th><th>الحالة</th><th></th></tr>${keys.map(k=>{const q=k.split('|'),r=D.att[k],e=E(q[0]),l=e&&r.in?Math.max(0,tm(r.in)-tm(e.start)):0;return `<tr><td>${q[1]}</td><td>${esc(e?e.name:q[0])}</td><td>${r.in||'-'}</td><td>${r.out||'-'}${r.nx?' (+1)':''}</td><td class="${l>D.set.grace?'neg':''}">${l}</td><td>${ST[r.st]}</td><td><button onclick="editA('${k}')">تعديل</button><button class="x" onclick="delA('${k}')">حذف</button></td></tr>`}).join('')||'<tr><td colspan="7" class="hint">لا توجد سجلات في هذا الشهر. أضف يدويًا أو استورد ملف الحضور من ZKTeco من تبويب الموظفون.</td></tr>'}</table></div>`;
 },
@@ -128,13 +130,14 @@ adj(){
  <div class="tw"><table><tr><th>التاريخ</th><th>الموظف</th><th>النوع</th><th>المبلغ</th><th>ملاحظة</th><th></th></tr>${D.adj.map((x,i)=>[x,i]).filter(a=>a[0].date.startsWith(m)).map(a=>{const x=a[0],e=E(x.emp);return `<tr><td>${x.date}</td><td>${esc(e?e.name:x.emp)}</td><td>${L[x.type]}</td><td>${fm(x.amt)}</td><td>${esc(x.note)}</td><td><button class="x" onclick="D.adj.splice(${a[1]},1);save();R()">حذف</button></td></tr>`}).join('')||'<tr><td colspan="6" class="hint">لا توجد حركات في هذا الشهر</td></tr>'}</table></div>`;
 },
 pay(){
- const m=M(),R_=D.emp.map(e=>[e,calc(e,m)]),s=k=>R_.reduce((a,r)=>a+r[1][k],0),base=D.emp.reduce((a,e)=>a+e.salary,0);
- return `<p class="np"><button class="p" onclick="print()">طباعة كشف المرتبات</button></p><div class="tw"><table><tr><th>الموظف</th><th>الأساسي</th><th>حضور</th><th>غياب</th><th>تأخير (د)</th><th>إضافي (س)</th><th>مكافآت</th><th>الخصومات</th><th>الصافي</th><th class="np"></th></tr>${R_.map(a=>{const e=a[0],r=a[1];return `<tr><td>${esc(e.name)}</td><td>${fm(e.salary)}</td><td>${r.pres}</td><td class="${r.abs?'neg':''}">${r.abs}</td><td>${r.late}</td><td>${fm(r.ot)}</td><td>${fm(r.bon+r.oT)}</td><td class="neg">${fm(r.ded)}</td><td><b>${fm(r.net)}</b></td><td class="np"><button onclick="slip('${esc(e.id)}')">قسيمة</button></td></tr>`}).join('')}<tfoot><tr><td>الإجمالي</td><td>${fm(base)}</td><td>${s('pres')}</td><td>${s('abs')}</td><td>${s('late')}</td><td>${fm(s('ot'))}</td><td>${fm(s('add'))}</td><td>${fm(s('ded'))}</td><td>${fm(s('net'))}</td><td class="np"></td></tr></tfoot></table></div>
- <p class="hint">الخصومات = تأخير + انصراف مبكر + غياب + خصومات وسلف + تأمينات. الصافي = الأساسي + الإضافي والمكافآت − الخصومات.</p>`;
+ const m=M(),R_=D.emp.map(e=>[e,calc(e,m)]),s=k=>R_.reduce((a,r)=>a+r[1][k],0),bs=D.emp.reduce((a,e)=>a+e.salary,0);
+ const h=['الاسم','الوظيفة','المرتب الأساسي','سلف','تأمينات','يومية','الحضور الفعلي','الحضور + الإجازات المدفوعة','غياب','نقدية خصومات','نقدية مكافآت','صافي المرتب'];
+ return `<p class="np"><button class="p" onclick="print()">طباعة كشف المرتبات</button></p><div class="tw"><table><tr>${h.map(x=>`<th>${x}</th>`).join('')}<th class="np"></th></tr>${R_.map(a=>{const e=a[0],r=a[1];return `<tr><td>${esc(e.name)}</td><td>${esc(e.title)}</td><td>${fm(e.salary)}</td><td>${fm(r.adv)}</td><td>${r.ins?fm(r.ins):'-'}</td><td>${fm(r.daily)}</td><td>${r.pres}</td><td>${r.tot}</td><td class="${r.abs?'neg':''}">${r.abs}</td><td>${fm(r.dedT)}</td><td>${fm(r.bonT)}</td><td><b>${fm(r.net)}</b></td><td class="np"><button onclick="slip('${esc(e.id)}')">قسيمة</button></td></tr>`}).join('')}<tfoot><tr><td>الإجمالي</td><td></td><td>${fm(bs)}</td><td>${fm(s('adv'))}</td><td>${fm(s('ins'))}</td><td></td><td>${s('pres')}</td><td>${s('tot')}</td><td>${s('abs')}</td><td>${fm(s('dedT'))}</td><td>${fm(s('bonT'))}</td><td>${fm(s('net'))}</td><td class="np"></td></tr></tfoot></table></div>
+ <p class="hint">الصافي = (الحضور + الإجازات المدفوعة) × اليومية − السلف − نقدية الخصومات + نقدية المكافآت. الإجازة الأسبوعية تُحتسب مدفوعة تلقائيًا، وأي إجازة أخرى تُسجَّل من تبويب الحضور بحالة «إجازة مدفوعة». الحساب حتى تاريخ اليوم في الشهر الحالي.</p>`;
 },
 set(){
  const n=(k,l)=>`<label>${l}<input type="number" step="any" value="${D.set[k]}" onchange="D.set.${k}=+this.value;save()"></label>`,tt=(k,l)=>`<label>${l}<input type="time" value="${D.set[k]}" onchange="D.set.${k}=this.value;save()"></label>`;
- return `<div class="box"><h3>قواعد الحساب</h3><div class="g">${n('grace','سماحية التأخير (دقيقة)')}${n('lateMult','معامل خصم التأخير')}${n('absMult','معامل خصم الغياب (يوم)')}${n('otMult','معامل الساعة الإضافية')}${n('otMin','أقل مدة تُحتسب إضافي (دقيقة)')}${n('div','قسمة الراتب لليوم (أيام)')}${n('ins','التأمينات % من الأساسي')}<label>الإجازة الأسبوعية<select onchange="D.set.off=+this.value;save()">${['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'].map((d,i)=>`<option value="${i}"${i==D.set.off?' selected':''}>${d}</option>`).join('')}</select></label>${tt('dStart','بداية الدوام الافتراضي')}${tt('dEnd','نهاية الدوام الافتراضي')}</div></div>
+ return `<div class="box"><h3>قواعد الحساب</h3><div class="g">${n('grace','سماحية التأخير (دقيقة)')}${n('lateMult','معامل خصم التأخير')}${n('otMult','معامل الساعة الإضافية')}${n('otMin','أقل مدة تُحتسب إضافي (دقيقة)')}${n('div','قسمة الراتب لليوم (أيام)')}<label>خصم التأمينات من الصافي<select onchange="D.set.insDed=+this.value;save()"><option value="0">لا (عرض فقط)</option><option value="1"${D.set.insDed?' selected':''}>نعم</option></select></label><label>الإجازة الأسبوعية<select onchange="D.set.off=+this.value;save()">${['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'].map((d,i)=>`<option value="${i}"${i==D.set.off?' selected':''}>${d}</option>`).join('')}</select></label>${tt('dStart','بداية الدوام الافتراضي')}${tt('dEnd','نهاية الدوام الافتراضي')}</div></div>
  <div class="box"><h3>نسخة احتياطية</h3><p class="hint">البيانات محفوظة في متصفح هذا الجهاز فقط. انسخ النص واحفظه للاحتفاظ بنسخة أو للنقل لجهاز آخر.</p><textarea id="bk" rows="4" style="width:100%"></textarea><br><button class="p" onclick="bk.value=JSON.stringify(D);bk.select()">عرض النسخة</button> <button class="p" onclick="rest()">استعادة من النص</button></div>`;
 }};
 
@@ -144,11 +147,11 @@ function R(){
 }
 function saveE(){
  const id=$('#eid').value.trim();if(!id)return msg('اكتب كود الموظف');
- const o={id,name:$('#enm').value.trim()||'موظف '+id,dept:$('#edp').value,title:$('#ejb').value,salary:+$('#esl').value||0,start:$('#est').value||D.set.dStart,end:$('#een').value||D.set.dEnd,hd:$('#ehd').value};
+ const o={id,name:$('#enm').value.trim()||'موظف '+id,dept:$('#edp').value,title:$('#ejb').value,salary:+$('#esl').value||0,ins:+$('#eis').value||0,start:$('#est').value||D.set.dStart,end:$('#een').value||D.set.dEnd,hd:$('#ehd').value};
  const i=D.emp.findIndex(e=>e.id==id);if(i>=0)D.emp[i]=o;else D.emp.push(o);
  save();R();msg('تم حفظ الموظف');
 }
-function editE(id){const e=E(id);[['eid','id'],['enm','name'],['edp','dept'],['ejb','title'],['esl','salary'],['est','start'],['een','end'],['ehd','hd']].forEach(a=>$('#'+a[0]).value=e[a[1]]||'');scrollTo(0,0)}
+function editE(id){const e=E(id);[['eid','id'],['enm','name'],['edp','dept'],['ejb','title'],['esl','salary'],['eis','ins'],['est','start'],['een','end'],['ehd','hd']].forEach(a=>$('#'+a[0]).value=e[a[1]]||'');scrollTo(0,0)}
 function delE(id){if(!confirm('حذف الموظف؟'))return;D.emp=D.emp.filter(e=>e.id!=id);save();R()}
 function saveA(){
  const id=$('#aemp').value,d=$('#adt').value;if(!id||!d)return msg('اختر الموظف والتاريخ');
@@ -162,7 +165,7 @@ function saveX(){
 }
 function slip(id){
  const e=E(id),r=calc(e,M());
- $('#dlg').innerHTML=`<h3>Lion Auto | قسيمة مرتب ${M()}</h3><p>${esc(e.name)} — كود ${esc(e.id)}<br>${esc(e.dept)} ${esc(e.title)}</p><table>${[['الراتب الأساسي',e.salary],['ساعات إضافية',r.oT],['مكافآت',r.bon],['خصم التأخير والانصراف المبكر',-r.dLate],['خصم الغياب ('+r.abs+' يوم)',-r.dAbs],['خصومات وسلف',-r.man],['التأمينات',-r.ins]].map(a=>`<tr><td>${a[0]}</td><td class="${a[1]<0?'neg':''}">${fm(a[1])}</td></tr>`).join('')}<tr><th>الصافي</th><th>${fm(r.net)}</th></tr></table><p class="np"><button class="p" onclick="document.body.classList.add('pp');print();document.body.classList.remove('pp')">طباعة</button> <button class="p" onclick="dlg.close()">إغلاق</button></p>`;
+ $('#dlg').innerHTML=`<h3>Lion Auto | قسيمة مرتب ${M()}</h3><p>${esc(e.name)} — كود ${esc(e.id)}<br>${esc(e.dept)} ${esc(e.title)}</p><table>${[['الراتب الأساسي',e.salary],['اليومية',r.daily],['أيام محتسبة ('+r.tot+' يوم، غياب '+r.abs+')',r.days*r.daily],['مكافآت وإضافي',r.bonT],['خصومات',-r.dedT],['سلف',-r.adv],['تأمينات',-r.insD]].map(a=>`<tr><td>${a[0]}</td><td class="${a[1]<0?'neg':''}">${fm(a[1])}</td></tr>`).join('')}<tr><th>الصافي</th><th>${fm(r.net)}</th></tr></table><p class="np"><button class="p" onclick="document.body.classList.add('pp');print();document.body.classList.remove('pp')">طباعة</button> <button class="p" onclick="dlg.close()">إغلاق</button></p>`;
  dlg.showModal();
 }
 function pd(s){
