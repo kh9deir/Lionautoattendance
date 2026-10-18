@@ -59,113 +59,201 @@ summary{cursor:pointer;color:var(--gold2)}
 @media(max-width:560px){header{padding:13px 15px;gap:10px}.brand-mark{width:42px;height:42px}.header-spacer{display:none}.month-field{width:100%;flex-direction:row;justify-content:space-between}.month-field input{flex:1;max-width:210px}nav button{padding:11px 12px;font-size:14px}.box,.card{padding:14px}.g{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}th,td{padding:8px 9px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 @media print{body{background:#fff;color:#111}header,nav,.np,#msg{display:none}.pp main{display:none}.tw,.box,.card{box-shadow:none}}
+@media print{@page{size:A4 landscape;margin:10mm}.tw{overflow:visible;border:0}table{font-size:11px;background:#fff;color:#111}th,td{white-space:normal;border:1px solid #999;padding:4px}th{background:#eee;color:#111}.neg{color:#b00}.hint{color:#444}dialog{border:0;width:100%;color:#111;background:#fff}button,details{display:none}}
+@media(max-width:600px){main{padding:10px}th,td{padding:6px;font-size:13px}.g{grid-template-columns:1fr 1fr}header input{width:100%}dialog{width:96vw}input,select{min-height:40px}}
+/* UI refresh: preserve the current dark/gold brand while improving hierarchy and touch usability */
+:root{--gold-soft:#e7d29b;--focus-ring:0 0 0 3px rgba(213,177,95,.28)}
+header{position:sticky;top:0;min-height:78px;padding-block:13px;backdrop-filter:blur(14px);z-index:7}
+header .brand-copy small{display:block;margin-top:3px}
+nav button{border-radius:9px;min-height:46px}
+nav button:focus-visible,button:focus-visible,.b:focus-within,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--gold2);outline-offset:2px}
+main{padding-block:clamp(18px,3vw,34px)}
+.view-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 0 22px;padding:0 0 17px;border-bottom:1px solid var(--bd)}
+.view-head .eyebrow{display:block;color:var(--gold);font-size:11px;font-weight:700;letter-spacing:.08em;margin-bottom:2px}
+.view-head h1{margin:0;color:var(--tx);font-size:clamp(23px,3vw,30px);line-height:1.35}
+.view-head p{margin:4px 0 0;color:var(--mu);font-size:13px}
+.view-month{flex:none;padding:6px 11px;border:1px solid #51472f;border-radius:999px;color:var(--gold2);background:#d5b15f0c;font-size:12px}
+.cards{grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:14px}
+.card{min-height:112px;display:flex;flex-direction:column;justify-content:center;padding:18px 20px}
+.card small{font-size:12px;line-height:1.5}
+.card b{font-size:clamp(23px,2.5vw,29px);line-height:1.35;font-variant-numeric:tabular-nums}
+.box{padding:clamp(16px,2.5vw,22px);margin-bottom:18px}
+.box h3{display:flex;align-items:center;gap:9px}
+.box h3:before{content:"";width:4px;height:18px;border-radius:4px;background:var(--gold)}
+input,select,textarea{min-height:42px}
+button.p,.b,td button{min-height:40px}
+td button{min-height:34px}
+.tw{max-width:100%;overscroll-behavior-inline:contain}
+table{font-variant-numeric:tabular-nums}
+tbody tr:nth-child(even) td{background-color:rgba(255,255,255,.012)}
+#msg{position:sticky;top:80px;z-index:5;width:fit-content;max-width:min(92vw,700px);padding:7px 14px;border:1px solid #75c69d44;border-radius:9px;background:#17231d}
+#msg:empty{display:none}
+@media(min-width:801px){
+ nav{position:fixed;inset-block:78px 0;inset-inline-start:0;width:236px;display:flex;flex-direction:column;align-items:stretch;gap:5px;padding:18px 12px 24px;overflow-y:auto;overflow-x:hidden;border:0;border-inline-end:1px solid var(--bd);background:rgba(22,22,23,.97);backdrop-filter:blur(14px)}
+ nav button{display:flex;align-items:center;gap:12px;width:100%;padding:10px 14px;text-align:start;border:1px solid transparent;border-bottom:0;color:#b5b1a8}
+ nav button:before{width:22px;text-align:center;color:#aaa69d;font-size:17px;line-height:1}
+ nav button:nth-child(1):before{content:"⌂"}nav button:nth-child(2):before{content:"♙"}nav button:nth-child(3):before{content:"◷"}nav button:nth-child(4):before{content:"!"}nav button:nth-child(5):before{content:"±"}nav button:nth-child(6):before{content:"د"}nav button:nth-child(7):before{content:"⚙"}
+ nav button:hover{background:#d5b15f10}
+ nav .on{border-color:#d5b15f26;border-inline-start:3px solid var(--gold);background:linear-gradient(90deg,#d5b15f12,transparent);color:var(--gold2)}
+ nav .on:before{color:var(--gold2)}
+ main{margin-inline-start:236px;max-width:none;padding-inline:clamp(24px,4vw,58px)}
+ #msg{margin-inline-start:236px}
+}
+@media(max-width:800px){
+ nav{position:fixed;inset:auto 0 0;z-index:9;min-height:66px;padding:5px 7px max(5px,env(safe-area-inset-bottom));gap:3px;justify-content:flex-start;border:0;border-top:1px solid #51472f;background:rgba(20,20,21,.97);backdrop-filter:blur(18px);box-shadow:0 -8px 25px #0005}
+ nav button{display:flex;flex:1 1 0;min-width:44px;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:52px;padding:5px 2px;font-size:9.5px;line-height:1.15;white-space:normal;border:0;border-radius:8px}
+ nav button:before{font-size:16px;color:inherit}
+ nav button:nth-child(1):before{content:"⌂"}nav button:nth-child(2):before{content:"♙"}nav button:nth-child(3):before{content:"◷"}nav button:nth-child(4):before{content:"!"}nav button:nth-child(5):before{content:"±"}nav button:nth-child(6):before{content:"د"}nav button:nth-child(7):before{content:"⚙"}
+ nav .on{border:0;background:#d5b15f15;color:var(--gold2)}
+ main{padding:18px 14px 100px}
+ #msg{position:relative;top:auto;margin:8px 14px 0;width:auto;max-width:none}
+ .view-head{margin-bottom:17px}
+ .view-month{font-size:11px}
+}
+@media(max-width:420px){.view-head{align-items:flex-start}.view-head p{max-width:245px}.view-month{padding:5px 8px}.cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.card{min-height:100px;padding:13px}.card b{font-size:22px}}
+@media print{#msg{display:none!important}.view-head{border:0}.tw{overflow:visible;border:0}th{position:static}}
 </style>
 </head>
 <body>
 <header><div class="brand"><div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M24 4 40 10v12c0 10-6.8 17.7-16 22C14.8 39.7 8 32 8 22V10L24 4Z" stroke="currentColor" stroke-width="2"/><path d="m17 17 7-5 7 5-2 12-5 5-5-5-2-12Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m17 17-5-3 2 9 4 2m13-8 5-3-2 9-4 2M20 23h.1M28 23h.1M21 28l3 2 3-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="brand-copy"><b>Lion Auto</b><small>إدارة الحضور والانصراف والمرتبات</small></div></div><div class="header-spacer"></div><label class="month-field"><span>الفترة الشهرية</span><input type="month" id="mon" aria-label="الشهر"></label></header>
-<nav id="nav"></nav><div id="msg"></div><main id="app"></main><dialog id="dlg"></dialog>
+<nav id="nav"></nav><div id="msg"></div><main id="app"></main><dialog id="dlg"></dialog><dialog id="cf"></dialog>
 <script>
 const $=s=>document.querySelector(s),K='lionauto_v1',pad=n=>String(n).padStart(2,'0');
 let D={emp:[],att:{},adj:[],set:{grace:10,otMult:0,otMin:30,lateMult:1,absMult:1,div:30,off:5,ins:0,dStart:'09:00',dEnd:'17:00'}};
+const DS=Object.assign({},D.set);
 try{const s=localStorage.getItem(K);if(s)D=Object.assign(D,JSON.parse(s))}catch(e){}
+D=migrate(D);
 if(D.set.v2!==2){if(!D.set.v2)D.set.otMult=0;D.set.lateMult=1;D.set.v2=2}
 const save=()=>{try{localStorage.setItem(K,JSON.stringify(D))}catch(e){}};
 const ymd=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
 const tm=t=>{if(!t)return 0;const a=t.split(':');return +a[0]*60+ +a[1]};
 const fm=n=>(Math.round(n*100)/100).toLocaleString('en-US');
-const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const vd=s=>/^\d{4}-\d{2}-\d{2}$/.test(s)&&ymd(new Date(s+'T00:00:00'))===s,vt=s=>/^([01]\d|2[0-3]):[0-5]\d$/.test(s);
+const act=()=>D.emp.filter(e=>!e.arch);let showArch=false,STG=null;
+function ask(t){return new Promise(r=>{const c=$('#cf');c.innerHTML=`<p>${t}</p><p class="np"><button class="p" id="cy">تأكيد</button> <button class="p" id="cn">إلغاء</button></p>`;c.showModal();$('#cy').onclick=()=>{c.close();r(true)};$('#cn').onclick=()=>{c.close();r(false)};c.oncancel=()=>r(false)})}
+function lg(t,k,o,n,w){D.log.unshift({d:new Date().toISOString(),t,k,o,n,w:w||''});D.log.length=Math.min(D.log.length,500)}
+function migrate(o){o.set=Object.assign({},DS,o.set||{});o.emp=(o.emp||[]).map(e=>Object.assign({},e,{id:String(e.id),arch:e.arch?1:0,salary:+e.salary||0}));o.att=o.att||{};o.adj=o.adj||[];o.hol=o.hol||[];o.log=o.log||[];o.meta=o.meta||{};o.lt=o.lt||{};o.v=2;return o}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(b&&typeof window[b.dataset.a]==='function')window[b.dataset.a](b.dataset.p,b.dataset.q)});
 const E=id=>D.emp.find(e=>e.id==id),M=()=>$('#mon').value;
-const msg=t=>{$('#msg').textContent=t};
-const opts=()=>D.emp.map(e=>`<option value="${esc(e.id)}">${esc(e.name)} (${esc(e.id)})</option>`).join('');
+const msg=(t,bad)=>{const m=$('#msg');m.textContent=t;m.style.color=bad?'var(--bad)':'var(--ok)'};
+const opts=()=>act().map(e=>`<option value="${esc(e.id)}">${esc(e.name)} (${esc(e.id)})</option>`).join('');
 const inp=(id,l,t='text',v='')=>`<label>${l}<input id="${id}" type="${t}" value="${esc(v)}"></label>`;
-const ST={present:'حاضر',absent:'غياب',leave:'إجازة مدفوعة',half:'نصف يوم'};
-const T=[['home','الرئيسية'],['emp','الموظفون'],['att','الحضور والانصراف'],['adj','مكافآت وخصومات'],['pay','المرتبات'],['set','الإعدادات']];
+const ST={present:'حاضر',absent:'غياب',leave:'إجازة مدفوعة',half:'نصف يوم',unpaid:'إجازة غير مدفوعة'};
+const T=[['home','الرئيسية'],['emp','الموظفون'],['att','الحضور والانصراف'],['chk','بصمات ناقصة'],['adj','مكافآت وخصومات'],['pay','المرتبات'],['set','الإعدادات']];
 let tab='home',fe='';
 
 function calc(e,m){
  const S=D.set,p=m.split('-').map(Number),n=new Date(p[0],p[1],0).getDate(),today=ymd(new Date());
  const en=tm(e.end)+(tm(e.end)<=tm(e.start)?1440:0),daily=e.salary/S.div,hr=daily/Math.max(1,(en-tm(e.start))/60);
- let pres=0,abs=0,lv=0,late=0,ot=0;
+ let pres=0,abs=0,lv=0,ul=0,late=0,ot=0;const H={};D.hol.forEach(h=>H[h.d]=1);
  for(let d=1;d<=n;d++){
   const dt=m+'-'+pad(d),wd=new Date(p[0],p[1]-1,d).getDay(),r=D.att[e.id+'|'+dt];
   if(dt>today||(e.hd&&dt<e.hd))continue;
   if(r&&r.st==='leave'){lv++;continue}
+  if(r&&r.st==='unpaid'){ul++;continue}
   if(r&&r.st==='absent'){abs++;continue}
   if(r&&r.st==='half'){pres+=.5;abs+=.5;continue}
   if(r&&(r.in||r.out||r.st==='present')){
    pres++;
    if(r.in){const l=tm(r.in)-tm(e.start);if(l>S.grace)late+=l}
    if(r.out){const o=tm(r.out)+(r.nx?1440:0);late+=Math.max(0,en-o);const x=o-en;if(x>=S.otMin)ot+=x}
-  }else if(wd===S.off)lv++;
+  }else if(wd===S.off||H[dt])lv++;
   else if(dt<today)abs++;
  }
  const a=D.adj.filter(x=>x.emp==e.id&&x.date.startsWith(m)),sum=t=>a.filter(x=>x.type===t).reduce((s,x)=>s+x.amt,0);
  const adv=sum('advance'),cd=sum('deduct'),cb=sum('bonus');
  const ov=(D.lt||{})[e.id+'|'+m],lm=ov&&ov.m!=null?ov.m:late,dLate=ov&&ov.a!=null?ov.a:lm/60*hr*S.lateMult,oT=ot/60*hr*S.otMult,ins=+e.ins||0,insD=S.insDed?ins:0,lateDone=a.filter(x=>x.auto==='late').reduce((q,x)=>q+x.amt,0);
  const tot=pres+lv,days=Math.min(S.div,tot),dedT=cd,bonT=cb+oT;
- return{pres,lv,tot,abs,daily,days,adv,ins,insD,dedT,bonT,late:lm,lateAuto:late,lateOv:!!ov,dLate,lateDone,ot:ot/60,ded:dedT+adv+insD,add:bonT,net:days*daily+bonT-dedT-adv-insD};
+ return{pres,lv,tot,abs,daily,days,adv,ins,insD,dedT,bonT,late:lm,lateAuto:late,autoAmt:late/60*hr*S.lateMult,manD:cd-lateDone,ul,lateOv:!!ov,dLate,lateDone,ot:ot/60,ded:dedT+adv+insD,add:bonT,net:days*daily+bonT-dedT-adv-insD};
 }
 
 const V={
 home(){
- const m=M(),rows=D.emp.map(e=>calc(e,m)),t=ymd(new Date()),s=k=>rows.reduce((a,r)=>a+r[k],0);
- const pr=D.emp.filter(e=>D.att[e.id+'|'+t]&&D.att[e.id+'|'+t].in).length;
- return `<div class="cards">${[['الموظفون',D.emp.length],['حضور اليوم',pr],['أيام الغياب هذا الشهر',s('abs')],['إجمالي الخصومات',fm(s('ded'))],['المكافآت والإضافي',fm(s('add'))],['صافي المرتبات',fm(s('net'))]].map(a=>`<div class="card"><small>${a[0]}</small><b>${a[1]}</b></div>`).join('')}</div>`
+ const m=M(),rows=act().map(e=>calc(e,m)),t=ymd(new Date()),s=k=>rows.reduce((a,r)=>a+r[k],0);
+ const pr=act().filter(e=>D.att[e.id+'|'+t]&&D.att[e.id+'|'+t].in).length;
+ return `<div class="cards">${[['الموظفون',act().length],['حضور اليوم',pr],['أيام الغياب هذا الشهر',s('abs')],['إجمالي الخصومات',fm(s('ded'))],['المكافآت والإضافي',fm(s('add'))],['بصمات ناقصة',issues(m).length],['صافي المرتبات',fm(s('net'))]].map(a=>`<div class="card"><small>${a[0]}</small><b>${a[1]}</b></div>`).join('')}</div>`
  +(D.emp.length?'':'<p class="hint">ابدأ بإضافة الموظفين من تبويب «الموظفون»، أو استورد ملف ZKTeco مباشرة.</p>');
 },
 emp(){
  return `<div class="box"><h3>إضافة / تعديل موظف</h3><div class="g">${inp('eid','كود الموظف (نفس ID في ZKTeco)')}${inp('enm','الاسم')}${inp('edp','القسم')}${inp('ejb','الوظيفة')}${inp('esl','الراتب الأساسي','number')}${inp('eis','تأمينات (مبلغ شهري)','number')}${inp('est','بداية الدوام','time',D.set.dStart)}${inp('een','نهاية الدوام','time',D.set.dEnd)}${inp('ehd','تاريخ التعيين','date')}</div>
  <button class="p" onclick="saveE()">حفظ الموظف</button> <label class="b" style="display:inline-block;color:var(--onb)">استيراد من ZKTeco (موظفين / حضور)<input type="file" hidden accept=".pdf,.csv,.txt,.dat,.xls,.xlsx" onchange="imp(this.files[0])"></label><details style="margin-top:10px"><summary>لو تقرير PDF لم يُقرأ: الصق نص التقرير هنا</summary><textarea id="zt" rows="4" style="width:100%"></textarea><button class="p" onclick="zkPaste()">استيراد النص</button></details></div>
- <div class="tw"><table><tr><th>الكود</th><th>الاسم</th><th>القسم</th><th>الوظيفة</th><th>الراتب</th><th>الدوام</th><th></th></tr>${D.emp.map(e=>`<tr><td>${esc(e.id)}</td><td>${esc(e.name)}</td><td>${esc(e.dept)}</td><td>${esc(e.title)}</td><td class="${e.salary?'':'neg'}">${fm(e.salary)}</td><td>${e.start} - ${e.end}</td><td><button onclick="editE('${esc(e.id)}')">تعديل</button><button class="x" onclick="delE('${esc(e.id)}')">حذف</button></td></tr>`).join('')||'<tr><td colspan="7" class="hint">لا يوجد موظفون بعد</td></tr>'}</table></div>`;
+ <label style="flex-direction:row;gap:6px;margin-bottom:8px"><input type="checkbox" ${showArch?'checked':''} onchange="showArch=this.checked;R()"> عرض الموظفين المؤرشفين</label><div class="tw"><table><tr><th>الكود</th><th>الاسم</th><th>القسم</th><th>الوظيفة</th><th>الراتب</th><th>الدوام</th><th></th></tr>${D.emp.filter(e=>showArch||!e.arch).map(e=>`<tr${e.arch?' style="opacity:.55"':''}><td>${esc(e.id)}</td><td>${esc(e.name)}</td><td>${esc(e.dept)}</td><td>${esc(e.title)}</td><td class="${e.salary?'':'neg'}">${fm(e.salary)}</td><td>${e.start} - ${e.end}</td><td><button data-a="editE" data-p="${esc(e.id)}">تعديل</button><button data-a="arc" data-p="${esc(e.id)}">${e.arch?'استعادة':'أرشفة'}</button><button class="x" data-a="delE" data-p="${esc(e.id)}">حذف نهائي</button></td></tr>`).join('')||'<tr><td colspan="7" class="hint">لا يوجد موظفون بعد</td></tr>'}</table></div>`;
 },
 att(){
  const m=M(),keys=Object.keys(D.att).filter(k=>k.split('|')[1].startsWith(m)&&(!fe||k.split('|')[0]==fe)).sort((a,b)=>b.split('|')[1].localeCompare(a.split('|')[1]));
- return `<div class="box"><h3>تسجيل حضور يدوي</h3><div class="g"><label>الموظف<select id="aemp">${opts()}</select></label>${inp('adt','التاريخ','date',ymd(new Date()))}${inp('ain','حضور','time')}${inp('aout','انصراف','time')}<label>الحالة<select id="ast"><option value="present">حاضر</option><option value="absent">غياب</option><option value="leave">إجازة مدفوعة</option><option value="half">نصف يوم</option></select></label></div><button class="p" onclick="saveA()">حفظ</button></div>
+ return `<div class="box"><h3>تسجيل حضور يدوي</h3><div class="g"><label>الموظف<select id="aemp">${opts()}</select></label>${inp('adt','التاريخ','date',ymd(new Date()))}${inp('ain','حضور','time')}${inp('aout','انصراف','time')}<label>الحالة<select id="ast"><option value="present">حاضر</option><option value="absent">غياب</option><option value="leave">إجازة مدفوعة</option><option value="half">نصف يوم</option><option value="unpaid">إجازة غير مدفوعة</option></select></label></div><button class="p" onclick="saveA()">حفظ</button></div>
  <label style="max-width:300px;margin-bottom:10px">تصفية بالموظف<select onchange="fe=this.value;R()"><option value="">الكل</option>${opts().replace('value="'+fe+'"','value="'+fe+'" selected')}</select></label>
- <div class="tw"><table><tr><th>التاريخ</th><th>الموظف</th><th>حضور</th><th>انصراف</th><th>تأخير (د)</th><th>الحالة</th><th></th></tr>${keys.map(k=>{const q=k.split('|'),r=D.att[k],e=E(q[0]),l=e&&r.in?Math.max(0,tm(r.in)-tm(e.start)):0;return `<tr><td>${q[1]}</td><td>${esc(e?e.name:q[0])}</td><td>${r.in||'-'}</td><td>${r.out||'-'}${r.nx?' (+1)':''}</td><td class="${l>D.set.grace?'neg':''}">${l}</td><td>${ST[r.st]}</td><td><button onclick="editA('${k}')">تعديل</button><button class="x" onclick="delA('${k}')">حذف</button></td></tr>`}).join('')||'<tr><td colspan="7" class="hint">لا توجد سجلات في هذا الشهر. أضف يدويًا أو استورد ملف الحضور من ZKTeco من تبويب الموظفون.</td></tr>'}</table></div>`;
+ <div class="tw"><table><tr><th>التاريخ</th><th>الموظف</th><th>حضور</th><th>انصراف</th><th>تأخير (د)</th><th>الحالة</th><th></th></tr>${keys.map(k=>{const q=k.split('|'),r=D.att[k],e=E(q[0]),l=e&&r.in?Math.max(0,tm(r.in)-tm(e.start)):0;return `<tr><td>${q[1]}</td><td>${esc(e?e.name:q[0])}</td><td>${r.in||'-'}</td><td>${r.out||'-'}${r.nx?' (+1)':''}</td><td class="${l>D.set.grace?'neg':''}">${l}</td><td>${ST[r.st]}</td><td><button data-a="editA" data-p="${esc(k)}">تعديل</button><button class="x" data-a="delA" data-p="${esc(k)}">حذف</button></td></tr>`}).join('')||'<tr><td colspan="7" class="hint">لا توجد سجلات في هذا الشهر. أضف يدويًا أو استورد ملف الحضور من ZKTeco من تبويب الموظفون.</td></tr>'}</table></div>`;
+},
+chk(){
+ const L=issues(M());
+ return `<p class="hint">أيام فيها حضور بدون انصراف، أو انصراف بدون حضور، أو مدة عمل أقل من ساعتين (شهر ${M()}). راجعها قبل المرتبات: «تعديل» لتصحيح الأوقات، «نصف يوم» أو «غياب» لتغيير الحالة، «سليم» لو البصمة صحيحة وتخفيها من القائمة.</p><div class="tw"><table><tr><th>التاريخ</th><th>الموظف</th><th>حضور</th><th>انصراف</th><th>المشكلة</th><th>إجراء</th></tr>${L.map(x=>{const e=E(x.id),k=x.k;return `<tr><td>${x.date}</td><td>${esc(e?e.name:x.id)}</td><td>${x.r.in||'-'}</td><td>${x.r.out||'-'}${x.r.nx?' (+1)':''}</td><td class="neg">${x.p}</td><td><button data-a="jump" data-p="${esc(k)}">تعديل</button><button data-a="fix" data-p="${esc(k)}" data-q="half">نصف يوم</button><button data-a="fix" data-p="${esc(k)}" data-q="absent">غياب</button><button data-a="fix" data-p="${esc(k)}" data-q="ok">سليم</button></td></tr>`}).join('')||'<tr><td colspan="6" class="hint">✓ لا توجد بصمات ناقصة في هذا الشهر</td></tr>'}</table></div>`;
 },
 adj(){
  const m=M(),L={bonus:'مكافأة',deduct:'خصم',advance:'سلفة'};
  return `<div class="box"><h3>مكافأة / خصم / سلفة</h3><div class="g"><label>الموظف<select id="xemp">${opts()}</select></label>${inp('xdt','التاريخ','date',ymd(new Date()))}<label>النوع<select id="xty"><option value="bonus">مكافأة</option><option value="deduct">خصم</option><option value="advance">سلفة</option></select></label>${inp('xam','المبلغ','number')}${inp('xnt','السبب / ملاحظة')}</div><button class="p" onclick="saveX()">إضافة</button></div>
- <div class="tw"><table><tr><th>التاريخ</th><th>الموظف</th><th>النوع</th><th>المبلغ</th><th>ملاحظة</th><th></th></tr>${D.adj.map((x,i)=>[x,i]).filter(a=>a[0].date.startsWith(m)).map(a=>{const x=a[0],e=E(x.emp);return `<tr><td>${x.date}</td><td>${esc(e?e.name:x.emp)}</td><td>${L[x.type]}</td><td>${fm(x.amt)}</td><td>${esc(x.note)}</td><td><button class="x" onclick="D.adj.splice(${a[1]},1);save();R()">حذف</button></td></tr>`}).join('')||'<tr><td colspan="6" class="hint">لا توجد حركات في هذا الشهر</td></tr>'}</table></div>`;
+ <div class="tw"><table><tr><th>التاريخ</th><th>الموظف</th><th>النوع</th><th>المبلغ</th><th>ملاحظة</th><th></th></tr>${D.adj.map((x,i)=>[x,i]).filter(a=>a[0].date.startsWith(m)).map(a=>{const x=a[0],e=E(x.emp);return `<tr><td>${x.date}</td><td>${esc(e?e.name:x.emp)}</td><td>${L[x.type]}</td><td>${fm(x.amt)}</td><td>${esc(x.note)}</td><td><button class="x" data-a="delX" data-p="${a[1]}">حذف</button></td></tr>`}).join('')||'<tr><td colspan="6" class="hint">لا توجد حركات في هذا الشهر</td></tr>'}</table></div>`;
 },
 pay(){
- const m=M(),R_=D.emp.map(e=>[e,calc(e,m)]),s=k=>R_.reduce((a,r)=>a+r[1][k],0),bs=D.emp.reduce((a,e)=>a+e.salary,0);
- const h=['الاسم','الوظيفة','المرتب الأساسي','سلف','تأمينات','يومية','الحضور الفعلي','الحضور','غياب','التأخير (د)','خصم التأخير','نقدية خصومات','نقدية مكافآت','صافي المرتب'];
- return `<p class="np"><button class="p" onclick="runLate()">تنفيذ خصومات التأخير</button> <button class="p" onclick="print()">طباعة كشف المرتبات</button></p><div class="tw"><table><tr>${h.map(x=>`<th>${x}</th>`).join('')}<th class="np"></th></tr>${R_.map(a=>{const e=a[0],r=a[1];return `<tr><td>${esc(e.name)}</td><td>${esc(e.title)}</td><td>${fm(e.salary)}</td><td>${fm(r.adv)}</td><td>${r.ins?fm(r.ins):'-'}</td><td>${fm(r.daily)}</td><td>${r.pres}</td><td>${r.tot}</td><td class="${r.abs?'neg':''}">${r.abs}</td><td class="${r.late?'neg':''}">${r.late}${r.lateOv?' ✎':''}</td><td>${r.lateDone?'<span style="color:var(--ok)">✓ '+fm(r.lateDone)+'</span>':fm(r.dLate)}</td><td>${fm(r.dedT)}</td><td>${fm(r.bonT)}</td><td><b>${fm(r.net)}</b></td><td class="np"><button onclick="editLate('${esc(e.id)}')">تعديل</button><button onclick="slip('${esc(e.id)}')">قسيمة</button></td></tr>`}).join('')}<tfoot><tr><td>الإجمالي</td><td></td><td>${fm(bs)}</td><td>${fm(s('adv'))}</td><td>${fm(s('ins'))}</td><td></td><td>${s('pres')}</td><td>${s('tot')}</td><td>${s('abs')}</td><td>${s('late')}</td><td>${fm(s('dLate'))}</td><td>${fm(s('dedT'))}</td><td>${fm(s('bonT'))}</td><td>${fm(s('net'))}</td><td class="np"></td></tr></tfoot></table></div>
- <p class="hint">الصافي = أيام الحضور المحتسبة × اليومية − السلف − نقدية الخصومات + نقدية المكافآت. الإجازة الأسبوعية تُحتسب مدفوعة تلقائيًا، وأي إجازة أخرى تُسجَّل من تبويب الحضور بحالة «إجازة مدفوعة». الحساب حتى تاريخ اليوم في الشهر الحالي. التأخير = تأخر الحضور + الانصراف المبكر. زر «تنفيذ خصومات التأخير» يحوّله إلى خصم نقدي (ويمكن إعادة تنفيذه بعد أي تعديل)، وزر «تعديل» يغيّر دقائق التأخير أو قيمة الخصم للموظف.</p>`;
+ const m=M(),R_=act().map(e=>[e,calc(e,m)]),s=k=>R_.reduce((a,r)=>a+r[1][k],0),bs=act().reduce((a,e)=>a+e.salary,0);
+ const h=['الاسم','الوظيفة','المرتب الأساسي','سلف','تأمينات','يومية','الحضور الفعلي','الحضور','غياب','إجازة بدون أجر','التأخير (د)','خصم التأخير','نقدية خصومات','نقدية مكافآت','صافي المرتب'];
+ return `${issues(m).length?`<p class="np" style="color:var(--bad)">⚠ يوجد ${issues(m).length} بصمة ناقصة في هذا الشهر قد تؤثر على الحساب. <button class="p" onclick="tab='chk';R()">مراجعتها</button></p>`:''}<p class="np"><button class="p" onclick="runLate()">تنفيذ خصومات التأخير</button> <button class="p" onclick="print()">طباعة كشف المرتبات</button></p><div class="tw"><table><tr>${h.map(x=>`<th>${x}</th>`).join('')}<th class="np"></th></tr>${R_.map(a=>{const e=a[0],r=a[1];return `<tr><td>${esc(e.name)}</td><td>${esc(e.title)}</td><td>${fm(e.salary)}</td><td>${fm(r.adv)}</td><td>${r.ins?fm(r.ins):'-'}</td><td>${fm(r.daily)}</td><td>${r.pres}</td><td>${r.tot}</td><td class="${r.abs?'neg':''}">${r.abs}</td><td>${r.ul}</td><td class="${r.late?'neg':''}">${r.late}${r.lateOv?' ✎':''}</td><td>${r.lateDone?'<span style="color:var(--ok)">✓ '+fm(r.lateDone)+'</span>':fm(r.dLate)}</td><td>${fm(r.manD)}</td><td>${fm(r.bonT)}</td><td><b>${fm(r.net)}</b></td><td class="np"><button data-a="editLate" data-p="${esc(e.id)}">تعديل</button><button data-a="slip" data-p="${esc(e.id)}">قسيمة</button></td></tr>`}).join('')}<tfoot><tr><td>الإجمالي</td><td></td><td>${fm(bs)}</td><td>${fm(s('adv'))}</td><td>${fm(s('ins'))}</td><td></td><td>${s('pres')}</td><td>${s('tot')}</td><td>${s('abs')}</td><td>${s('ul')}</td><td>${s('late')}</td><td>${fm(s('dLate'))}</td><td>${fm(s('manD'))}</td><td>${fm(s('bonT'))}</td><td>${fm(s('net'))}</td><td class="np"></td></tr></tfoot></table></div>
+ <p class="hint">الصافي = أيام الحضور المحتسبة × اليومية − السلف − نقدية الخصومات + نقدية المكافآت. الإجازة الأسبوعية تُحتسب مدفوعة تلقائيًا، وأي إجازة أخرى تُسجَّل من تبويب الحضور بحالة «إجازة مدفوعة». الحساب حتى تاريخ اليوم في الشهر الحالي. التأخير = تأخر الحضور + الانصراف المبكر. «نقدية خصومات» هي الخصومات اليدوية فقط، وخصم التأخير المنفّذ يظهر في عموده المستقل (والصافي يشملهما). الإجازة غير المدفوعة والغياب لا يُحتسبان ضمن الأيام المدفوعة، والعطلات الرسمية تُحتسب مدفوعة. زر «تنفيذ خصومات التأخير» يحوّله إلى خصم نقدي (ويمكن إعادة تنفيذه بعد أي تعديل)، وزر «تعديل» يغيّر دقائق التأخير أو قيمة الخصم للموظف.</p>`;
 },
 set(){
- const n=(k,l)=>`<label>${l}<input type="number" step="any" value="${D.set[k]}" onchange="D.set.${k}=+this.value;save()"></label>`,tt=(k,l)=>`<label>${l}<input type="time" value="${D.set[k]}" onchange="D.set.${k}=this.value;save()"></label>`;
+ const n=(k,l)=>`<label>${l}<input type="number" step="any" value="${D.set[k]}" onchange="setS('${k}',this)"></label>`,tt=(k,l)=>`<label>${l}<input type="time" value="${D.set[k]}" onchange="setS('${k}',this)"></label>`;
  return `<div class="box"><h3>قواعد الحساب</h3><div class="g">${n('grace','سماحية التأخير (دقيقة)')}${n('lateMult','معامل خصم التأخير')}${n('otMult','معامل الساعة الإضافية')}${n('otMin','أقل مدة تُحتسب إضافي (دقيقة)')}${n('div','قسمة الراتب لليوم (أيام)')}<label>خصم التأمينات من الصافي<select onchange="D.set.insDed=+this.value;save()"><option value="0">لا (عرض فقط)</option><option value="1"${D.set.insDed?' selected':''}>نعم</option></select></label><label>الإجازة الأسبوعية<select onchange="D.set.off=+this.value;save()">${['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'].map((d,i)=>`<option value="${i}"${i==D.set.off?' selected':''}>${d}</option>`).join('')}</select></label>${tt('dStart','بداية الدوام الافتراضي')}${tt('dEnd','نهاية الدوام الافتراضي')}</div></div>
- <div class="box"><h3>نسخة احتياطية</h3><p class="hint">البيانات محفوظة في متصفح هذا الجهاز فقط. انسخ النص واحفظه للاحتفاظ بنسخة أو للنقل لجهاز آخر.</p><textarea id="bk" rows="4" style="width:100%"></textarea><br><button class="p" onclick="bk.value=JSON.stringify(D);bk.select()">عرض النسخة</button> <button class="p" onclick="rest()">استعادة من النص</button></div>`;
+ <div class="box"><h3>العطلات الرسمية</h3><p class="hint">تُستثنى من الغياب وتُحتسب مدفوعة (مثل الإجازة الأسبوعية).</p><div class="g">${inp('hdt','التاريخ','date')}${inp('hnm','الاسم')}</div><button class="p" onclick="addH()">إضافة عطلة</button><div class="tw" style="margin-top:10px"><table>${D.hol.slice().sort((a,b)=>a.d.localeCompare(b.d)).map(h=>`<tr><td>${h.d}</td><td>${esc(h.n)}</td><td><button class="x" data-a="delH" data-p="${esc(h.d)}">حذف</button></td></tr>`).join('')||'<tr><td class="hint">لا توجد عطلات</td></tr>'}</table></div></div>
+ <div class="box"><h3>سجل التعديلات (آخر 30)</h3><p class="hint">يسجّل التوقيت والقيم السابقة والجديدة والسبب. لا يسجّل هوية المستخدم لأن التطبيق لا يعتمد على حسابات.</p><div class="tw"><table><tr><th>الوقت</th><th>الإجراء</th><th>البند</th><th>قبل</th><th>بعد</th><th>السبب</th></tr>${D.log.slice(0,30).map(x=>`<tr><td>${new Date(x.d).toLocaleString('en-GB')}</td><td>${esc(x.t)}</td><td>${esc(x.k)}</td><td>${esc(x.o==null?'-':x.o)}</td><td>${esc(x.n==null?'-':x.n)}</td><td>${esc(x.w)}</td></tr>`).join('')||'<tr><td class="hint">لا توجد تعديلات</td></tr>'}</table></div></div>
+ <div class="box"><h3>نسخة احتياطية</h3><p class="np"><button class="p" onclick="dl()">تنزيل نسخة احتياطية (JSON)</button> <label class="b" style="display:inline-block;color:var(--onb)">استعادة من ملف<input type="file" hidden accept=".json,application/json" onchange="rfile(this.files[0])"></label></p><p class="hint">${D.meta.lastBackup?'آخر نسخة تم تنزيلها من هذا المتصفح: '+new Date(D.meta.lastBackup).toLocaleString('en-GB'):'لم يتم تنزيل نسخة من هذا المتصفح بعد.'} البيانات محلية في متصفحك ولا تُزامَن تلقائيًا بين الأجهزة.</p><p class="hint">البيانات محفوظة في متصفح هذا الجهاز فقط. انسخ النص واحفظه للاحتفاظ بنسخة أو للنقل لجهاز آخر.</p><textarea id="bk" rows="4" style="width:100%"></textarea><br><button class="p" onclick="bk.value=JSON.stringify(D);bk.select()">عرض النسخة</button> <button class="p" onclick="rest()">استعادة من النص</button></div>`;
 }};
 
 function R(){
- $('#nav').innerHTML=T.map(a=>`<button class="${a[0]==tab?'on':''}" onclick="tab='${a[0]}';msg('');R()">${a[1]}</button>`).join('');
- $('#app').innerHTML=V[tab]();
+ const c=issues(M()),meta={home:['نظرة عامة','ملخص سريع للحضور والغياب والمستحقات خلال الفترة المحددة.'],emp:['إدارة الموظفين','أضف بيانات الفريق أو راجع سجلات الموظفين وحالتهم.'],att:['الحضور والانصراف','سجّل الحضور يدويًا أو راجع سجلات الشهر المحدد.'],chk:['مراجعة البصمات','تحقّق من السجلات الناقصة قبل مراجعة المرتبات.'],adj:['المكافآت والخصومات','تابع الحركات المالية المسجّلة للموظفين خلال الشهر.'],pay:['كشف المرتبات','راجع صافي المستحقات والتفاصيل قبل الطباعة أو الاعتماد.'],set:['الإعدادات والنسخ الاحتياطي','اضبط قواعد الحساب واحمِ بياناتك بنسخة احتياطية.']}[tab]||['إدارة Lion Auto','إدارة الحضور والانصراف والمرتبات.'];
+ $('#nav').setAttribute('aria-label','التنقل الرئيسي');
+ $('#nav').innerHTML=T.map(a=>`<button type="button" class="${a[0]==tab?'on':''}" aria-current="${a[0]==tab?'page':'false'}" onclick="tab='${a[0]}';msg('');R()">${a[1]}${a[0]=='chk'&&c?' ('+c+')':''}</button>`).join('');
+ $('#app').innerHTML=`<section class="view-head"><div><span class="eyebrow">LION AUTO · إدارة الموظفين</span><h1>${meta[0]}</h1><p>${meta[1]}</p></div><span class="view-month">${esc(M())}</span></section>`+V[tab]();
 }
 function saveE(){
- const id=$('#eid').value.trim();if(!id)return msg('اكتب كود الموظف');
- const o={id,name:$('#enm').value.trim()||'موظف '+id,dept:$('#edp').value,title:$('#ejb').value,salary:+$('#esl').value||0,ins:+$('#eis').value||0,start:$('#est').value||D.set.dStart,end:$('#een').value||D.set.dEnd,hd:$('#ehd').value};
- const i=D.emp.findIndex(e=>e.id==id);if(i>=0)D.emp[i]=o;else D.emp.push(o);
- save();R();msg('تم حفظ الموظف');
+ const id=$('#eid').value.trim(),nm=$('#enm').value.trim(),sl=$('#esl').value,is=$('#eis').value,st=$('#est').value||D.set.dStart,en=$('#een').value||D.set.dEnd,hd=$('#ehd').value;
+ if(!id||/\|/.test(id))return msg('كود الموظف مطلوب ولا يجوز أن يحتوي على الرمز |.',1);
+ if(!nm)return msg('اسم الموظف مطلوب.',1);
+ if(sl===''||!(+sl>=0))return msg('الراتب الأساسي مطلوب ولا يمكن أن يكون سالبًا.',1);
+ if(is!==''&&!(+is>=0))return msg('التأمينات لا يمكن أن تكون سالبة.',1);
+ if(!vt(st)||!vt(en)||st===en)return msg('أوقات الدوام غير صالحة (البداية والنهاية يجب أن تختلفا).',1);
+ if(hd&&!vd(hd))return msg('تاريخ التعيين غير صالح.',1);
+ const i=D.emp.findIndex(e=>e.id==id),old=D.emp[i],o={id,name:nm,dept:$('#edp').value.trim(),title:$('#ejb').value.trim(),salary:+sl,ins:+is||0,start:st,end:en,hd,arch:old?old.arch:0};
+ if(old)['salary','ins','start','end'].forEach(f=>{if(old[f]!=o[f])lg('تعديل موظف',nm+' — '+f,old[f],o[f])});
+ if(i>=0)D.emp[i]=o;else D.emp.push(o);
+ save();R();msg('تم حفظ الموظف.');
 }
 function editE(id){const e=E(id);[['eid','id'],['enm','name'],['edp','dept'],['ejb','title'],['esl','salary'],['eis','ins'],['est','start'],['een','end'],['ehd','hd']].forEach(a=>$('#'+a[0]).value=e[a[1]]||'');scrollTo(0,0)}
-function delE(id){if(!confirm('حذف الموظف؟'))return;D.emp=D.emp.filter(e=>e.id!=id);save();R()}
+async function delE(id){
+ const e=E(id);if(!e)return;const na=Object.keys(D.att).filter(k=>k.split('|')[0]==id).length,nj=D.adj.filter(x=>x.emp==id).length;
+ if(!await ask(`حذف <b>${esc(e.name)}</b> نهائيًا؟<br>سيُحذف معه ${na} سجل حضور و${nj} بند خصم/مكافأة/سلف، ولا يمكن التراجع. للاحتفاظ بالسجلات استخدم «أرشفة».`))return;
+ D.emp=D.emp.filter(x=>x.id!=id);Object.keys(D.att).forEach(k=>{if(k.split('|')[0]==id)delete D.att[k]});D.adj=D.adj.filter(x=>x.emp!=id);
+ lg('حذف نهائي',e.name,na+' حضور',null);save();R();msg('تم حذف الموظف نهائيًا.');
+}
+async function arc(id){const e=E(id);if(!e)return;const a=e.arch?0:1;if(!await ask((a?'أرشفة ':'استعادة ')+'<b>'+esc(e.name)+'</b>؟'+(a?'<br>لن يظهر في الإدخال والرواتب وتبقى سجلاته محفوظة.':'')))return;e.arch=a;lg(a?'أرشفة':'استعادة موظف',e.name);save();R();msg(a?'تمت الأرشفة.':'تمت الاستعادة.')}
 function saveA(){
- const id=$('#aemp').value,d=$('#adt').value;if(!id||!d)return msg('اختر الموظف والتاريخ');
- const ai=$('#ain').value,ao=$('#aout').value;D.att[id+'|'+d]={in:ai,out:ao,nx:ai&&ao&&tm(ao)<tm(ai)?1:0,st:$('#ast').value};save();R();msg('تم الحفظ');
+ const id=$('#aemp').value,d=$('#adt').value,ai=$('#ain').value,ao=$('#aout').value,st=$('#ast').value;
+ if(!id)return msg('اختر الموظف.',1);if(!vd(d))return msg('التاريخ غير صالح.',1);
+ if((ai&&!vt(ai))||(ao&&!vt(ao)))return msg('وقت الحضور أو الانصراف غير صالح.',1);
+ if(st==='present'&&!ai&&!ao)return msg('اكتب وقت الحضور أو الانصراف، أو غيّر الحالة.',1);
+ D.att[id+'|'+d]={in:ai,out:ao,nx:ai&&ao&&tm(ao)<tm(ai)?1:0,st};save();R();msg('تم حفظ سجل الحضور.');
 }
 function editA(k){const q=k.split('|'),r=D.att[k];$('#aemp').value=q[0];$('#adt').value=q[1];$('#ain').value=r.in||'';$('#aout').value=r.out||'';$('#ast').value=r.st;scrollTo(0,0)}
-function delA(k){delete D.att[k];save();R()}
+async function delA(k){if(!await ask('حذف سجل الحضور؟'))return;delete D.att[k];save();R();msg('تم حذف السجل.')}
 function saveX(){
- const id=$('#xemp').value,a=+$('#xam').value;if(!id||!a)return msg('اختر الموظف واكتب المبلغ');
- D.adj.push({emp:id,date:$('#xdt').value,type:$('#xty').value,amt:a,note:$('#xnt').value});save();R();msg('تمت الإضافة');
+ const id=$('#xemp').value,a=$('#xam').value,d=$('#xdt').value,ty=$('#xty').value,nt=$('#xnt').value.trim();
+ if(!id)return msg('اختر الموظف.',1);if(!(+a>0))return msg('المبلغ يجب أن يكون رقمًا أكبر من صفر.',1);if(!vd(d))return msg('التاريخ غير صالح.',1);
+ D.adj.push({emp:id,date:d,type:ty,amt:+a,note:nt});lg('إضافة '+{bonus:'مكافأة',deduct:'خصم',advance:'سلفة'}[ty],id+' '+d,null,+a,nt);save();R();msg('تمت الإضافة.');
 }
+async function delX(i){const x=D.adj[+i];if(!x||!await ask('حذف هذا البند ('+fm(x.amt)+')؟'))return;lg('حذف بند',x.emp+' '+x.date,x.amt,null,x.note);D.adj.splice(+i,1);save();R();msg('تم الحذف.')}
 function slip(id){
  const e=E(id),r=calc(e,M());
- $('#dlg').innerHTML=`<h3>Lion Auto | قسيمة مرتب ${M()}</h3><p>${esc(e.name)} — كود ${esc(e.id)}<br>${esc(e.dept)} ${esc(e.title)}</p><table>${[['الراتب الأساسي',e.salary],['اليومية',r.daily],['أيام محتسبة ('+r.tot+' يوم، غياب '+r.abs+')',r.days*r.daily],['مكافآت وإضافي',r.bonT],['خصومات',-r.dedT],['سلف',-r.adv],['تأمينات',-r.insD]].map(a=>`<tr><td>${a[0]}</td><td class="${a[1]<0?'neg':''}">${fm(a[1])}</td></tr>`).join('')}<tr><th>الصافي</th><th>${fm(r.net)}</th></tr></table><p class="np"><button class="p" onclick="document.body.classList.add('pp');print();document.body.classList.remove('pp')">طباعة</button> <button class="p" onclick="dlg.close()">إغلاق</button></p>`;
+ $('#dlg').innerHTML=`<h3>Lion Auto | قسيمة مرتب ${M()}</h3><p>${esc(e.name)} — كود ${esc(e.id)}<br>${esc(e.dept)} ${esc(e.title)}</p><table>${[['الراتب الأساسي',e.salary],['اليومية',r.daily],['أيام محتسبة ('+r.tot+' يوم، غياب '+r.abs+(r.ul?'، إجازة بدون أجر '+r.ul:'')+')',r.days*r.daily],['مكافآت وإضافي',r.bonT],['خصم يدوي',-r.manD],['خصم تأخير منفّذ',-r.lateDone],['سلف',-r.adv],['تأمينات',-r.insD]].map(a=>`<tr><td>${a[0]}</td><td class="${a[1]<0?'neg':''}">${fm(a[1])}</td></tr>`).join('')}<tr><th>الصافي</th><th>${fm(r.net)}</th></tr></table><p class="np"><button class="p" onclick="document.body.classList.add('pp');print();document.body.classList.remove('pp')">طباعة</button> <button class="p" onclick="dlg.close()">إغلاق</button></p>`;
  dlg.showModal();
 }
 function pd(s){
@@ -186,18 +274,16 @@ async function imp(f){
   const h=rows[0]||[];let ni=-1,ii=-1;
   if(!pd(h.join(' '))){ni=h.findIndex(c=>/name|اسم/i.test(c));ii=h.findIndex((c,i)=>i!=ni&&/id|no\.|رقم|كود|code/i.test(c));rows.shift()}
   if(ii<0)ii=0;
-  const P={};let ne=0,np=0;
+  const P={},NE=[],NA={};
   rows.forEach(r=>{
-   const id=r[ii];if(!id)return;const nm=ni>=0?r[ni]:'';let x=E(id);
-   if(!x){D.emp.push({id,name:nm||'موظف '+id,dept:'',title:'',salary:0,start:D.set.dStart,end:D.set.dEnd,hd:''});ne++}
-   else if(nm&&x.name.indexOf('موظف ')===0)x.name=nm;
+   const id=r[ii];if(!id)return;const nm=ni>=0?r[ni]:'';
+   if(!E(id)&&!NE.some(x=>x.id==id))NE.push({id,name:nm||'موظف '+id,dept:'',title:'',salary:0,start:D.set.dStart,end:D.set.dEnd,hd:''});
    const p=pd(r.filter((c,i)=>i!=ii&&i!=ni).join(' '));
    if(p&&p.time){const k=id+'|'+p.date;(P[k]=P[k]||[]).push(p.time)}
   });
-  Object.keys(P).forEach(k=>{const v=P[k].sort();D.att[k]={in:v[0],out:v.length>1?v[v.length-1]:'',st:'present'};np++});
-  save();R();
-  msg(`تم الاستيراد: ${ne} موظف جديد، ${np} يوم حضور. راجع الرواتب للموظفين الجدد (تظهر بالأحمر).`);
- }catch(e){msg('تعذر قراءة الملف، تأكد أنه CSV أو Excel أو DAT من ZKTeco')}
+  Object.keys(P).forEach(k=>{const v=P[k].sort();NA[k]={in:v[0],out:v.length>1?v[v.length-1]:'',st:'present'}});
+  stage(NE,NA,0);
+ }catch(e){msg('تعذر قراءة الملف ('+(e&&e.message||'صيغة غير معروفة')+'). تأكد أنه PDF أو CSV أو Excel أو DAT من ZKTeco، أو الصق نص التقرير في المربع أسفل زر الاستيراد.',1)}
 }
 async function pdfTok(f){
  pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -223,7 +309,7 @@ function zkRep(tk){
   Object.assign(p,f);
   if(p.ty&&p.a&&p.d){L.push({id:c,ty:p.ty,h:+p.a[1],m:+p.a[2],s:+p.a[3],date:p.d[3]+'-'+pad(p.d[2])+'-'+pad(p.d[1])});p={}}
  });
- if(!L.length)return msg('لم يتم التعرف على بصمات في التقرير. جرّب لصق نص التقرير في المربع أسفل زر الاستيراد.');
+ if(!L.length)return msg('لم يتم التعرف على بصمات في التقرير. جرّب لصق نص التقرير في المربع أسفل زر الاستيراد.',1);
  L.forEach(r=>{(G[r.id+'|'+r.date]=G[r.id+'|'+r.date]||[]).push(r)});
  Object.keys(G).forEach(k=>{
   const g=G[k],f=g[0],pm=f.h==12?1:f.ty=='in'?(f.h>=7&&f.h<=11?0:1):(f.h<=8?0:1);
@@ -232,7 +318,7 @@ function zkRep(tk){
   const q=k.split('|')[1].split('-'),base=Date.UTC(q[0],q[1]-1,q[2])/60000;
   g.forEach((r,i)=>(PU[r.id]=PU[r.id]||[]).push({t:base+best[i]/60,ty:r.ty}));
  });
- let ne=0,nd=0;const ids=Object.keys(N);Object.keys(PU).forEach(i=>ids.includes(i)||ids.push(i));
+ const NE=[],NA={};const ids=Object.keys(N);Object.keys(PU).forEach(i=>ids.includes(i)||ids.push(i));
  ids.forEach(id=>{
   const a=(PU[id]||[]).sort((x,y)=>x.t-y.t),sh=[];let cu=null;
   a.forEach(u=>{
@@ -245,33 +331,83 @@ function zkRep(tk){
   if(!E(id)){
    const q=(x,f,r)=>{x.sort((a,b)=>a-b);return x.length?Math[r](x[Math.floor(x.length*f)]/30)*30:null},fh=m=>pad(Math.floor(m/60)%24)+':'+pad(m%60);
    const si=q(sh.filter(x=>x.i).map(x=>x.i%1440),.25,'round'),so=q(sh.filter(x=>x.i&&x.o).map(x=>x.o%1440),.25,'floor');
-   D.emp.push({id,name:N[id]||'موظف '+id,dept:'',title:'',salary:0,start:si==null?D.set.dStart:fh(si),end:so==null?D.set.dEnd:fh(so),hd:sh.length?iso(sh[0].i||sh[0].o):''});ne++;
+   NE.push({id,name:N[id]||'موظف '+id,dept:'',title:'',salary:0,start:si==null?D.set.dStart:fh(si),end:so==null?D.set.dEnd:fh(so),hd:sh.length?iso(sh[0].i||sh[0].o):''});
   }
-  sh.forEach(x=>{D.att[id+'|'+iso(x.i||x.o)]={in:x.i?hm(x.i):'',out:x.o?hm(x.o):'',nx:x.i&&x.o&&dy(x.o)>dy(x.i)?1:0,st:'present'};nd++});
- });
- save();R();
- msg(`تم الاستيراد: ${ne} موظف جديد و${nd} يوم حضور. الأوقات في التقرير بنظام 12 ساعة بدون صباحًا/مساءً، وتم استنتاجها من ترتيب البصمات. مواعيد الدوام وتاريخ التعيين للموظفين الجدد مُقدّرة من البصمات، والراتب صفر: راجعها.`);
+  sh.forEach(x=>{NA[id+'|'+iso(x.i||x.o)]={in:x.i?hm(x.i):'',out:x.o?hm(x.o):'',nx:x.i&&x.o&&dy(x.o)>dy(x.i)?1:0,st:'present'}});
+ }); stage(NE,NA,1);
 }
 function editLate(id){
- const e=E(id),r=calc(e,M()),o=((D.lt||{})[id+'|'+M()]||{});
- $('#dlg').innerHTML=`<h3>تعديل التأخير — ${esc(e.name)}</h3><p class="hint">الشهر ${M()} — التأخير المحسوب تلقائيًا: ${r.lateAuto} دقيقة</p><div class="g">${inp('lmin','دقائق التأخير','number',r.late)}${inp('lamt','قيمة الخصم (اتركها فارغة للحساب التلقائي)','number',o.a==null?'':o.a)}</div><p class="np"><button class="p" onclick="saveLate('${esc(id)}')">حفظ</button> <button class="p" onclick="saveLate('${esc(id)}',1)">رجوع للتلقائي</button> <button class="p" onclick="dlg.close()">إغلاق</button></p>`;
+ const e=E(id),r=calc(e,M()),o=(D.lt||{})[id+'|'+M()]||{};
+ $('#dlg').innerHTML=`<h3>تعديل التأخير — ${esc(e.name)}</h3><table><tr><td>المحسوب تلقائيًا</td><td>${r.lateAuto} دقيقة — ${fm(r.autoAmt)}</td></tr><tr><td>المعتمد حاليًا</td><td>${r.late} دقيقة — ${fm(r.dLate)} ${r.lateOv?'(معدّل يدويًا)':''}</td></tr></table><div class="g">${inp('lmin','دقائق التأخير الجديدة','number',r.late)}${inp('lamt','قيمة الخصم (فارغة = تلقائي)','number',o.a==null?'':o.a)}${inp('lwhy','سبب التعديل (مطلوب)','text',o.w||'')}</div><p id="lerr" class="neg"></p><p class="np"><button class="p" data-a="saveLate" data-p="${esc(id)}">حفظ</button> <button class="p" data-a="saveLate" data-p="${esc(id)}" data-q="1">رجوع للتلقائي</button> <button class="p" onclick="dlg.close()">إغلاق</button></p>`;
  dlg.showModal();
 }
 function saveLate(id,auto){
- D.lt=D.lt||{};const k=id+'|'+M(),a=$('#lamt').value;
- if(auto)delete D.lt[k];else D.lt[k]={m:Math.max(0,+$('#lmin').value||0),a:a===''?null:+a};
+ const k=id+'|'+M(),e=E(id),r=calc(e,M()),w=$('#lwhy').value.trim(),m=+$('#lmin').value,a=$('#lamt').value,er=t=>{$('#lerr').textContent=t};
+ if(!w)return er('اكتب سبب التعديل.');
+ if(!auto){if($('#lmin').value===''||!(m>=0))return er('دقائق التأخير يجب أن تكون صفرًا أو أكثر.');if(a!==''&&!(+a>=0))return er('قيمة الخصم لا يمكن أن تكون سالبة.')}
+ if(auto){delete D.lt[k];lg('إرجاع التأخير للتلقائي',e.name+' '+M(),r.late+' د',r.lateAuto+' د',w)}
+ else{D.lt[k]={m,a:a===''?null:+a,w};lg('تعديل تأخير',e.name+' '+M(),r.late+' د / '+fm(r.dLate),m+' د / '+(a===''?'تلقائي':fm(+a)),w)}
  save();dlg.close();R();msg('تم التعديل. اضغط «تنفيذ خصومات التأخير» لتحديث الخصم النقدي.');
 }
-function runLate(){
+async function runLate(){
+ if(!await ask('تنفيذ خصومات التأخير لشهر '+M()+'؟ سيُستبدل أي خصم تأخير منفّذ سابقًا لنفس الشهر، فلا يتكرر.'))return;
  const m=M(),t=ymd(new Date()),y=+m.slice(0,4),mo=+m.slice(5),dt=t.startsWith(m)?t:m+'-'+pad(new Date(y,mo,0).getDate());let c=0;
- D.emp.forEach(e=>{
+ act().forEach(e=>{
   D.adj=D.adj.filter(x=>!(x.auto==='late'&&x.emp==e.id&&x.date.startsWith(m)));
   const r=calc(e,m);
   if(r.dLate>0){D.adj.push({emp:e.id,date:dt,type:'deduct',amt:Math.round(r.dLate*100)/100,note:'خصم تأخير '+r.late+' دقيقة',auto:'late'});c++}
  });
  save();R();msg(`تم تنفيذ خصم التأخير لـ ${c} موظف، وأُضيف إلى نقدية الخصومات وإلى تبويب مكافآت وخصومات.`);
 }
-function rest(){try{D=Object.assign({emp:[],att:{},adj:[]},JSON.parse($('#bk').value));save();R();msg('تمت الاستعادة')}catch(e){msg('النص غير صالح')}}
+function issues(m){
+ const t=ymd(new Date()),L=[];
+ Object.keys(D.att).forEach(k=>{
+  const q=k.split('|'),r=D.att[k];
+  if(!q[1].startsWith(m)||r.rv||(r.st&&r.st!=='present'))return;
+  let p='';
+  if(r.in&&!r.out){if(q[1]!==t)p='حضور بدون انصراف'}
+  else if(!r.in&&r.out)p='انصراف بدون حضور';
+  else if(r.in&&r.out&&tm(r.out)+(r.nx?1440:0)-tm(r.in)<120)p='مدة عمل قصيرة جدًا';
+  if(p)L.push({k,id:q[0],date:q[1],p,r});
+ });
+ return L.sort((a,b)=>a.date.localeCompare(b.date));
+}
+function jump(k){tab='att';R();editA(k)}
+function fix(k,a){const r=D.att[k];if(a!=='ok')r.st=a;r.rv=1;save();R()}
+async function rest(){try{const j=JSON.parse($('#bk').value),d=j.data||j;if(!Array.isArray(d.emp))throw 0;const o=migrate(Object.assign({emp:[],att:{},adj:[]},d));if(!await ask('استبدال كل البيانات الحالية بالنص المُلصق ('+o.emp.length+' موظف)؟'))return;D=o;save();R();msg('تمت الاستعادة.')}catch(e){msg('النص غير صالح.',1)}}
+async function rfile(f){
+ if(!f)return;
+ try{const j=JSON.parse(await f.text()),d=j.data||j;if(!d||!Array.isArray(d.emp)||typeof(d.att||{})!=='object')throw 0;const o=migrate(Object.assign({emp:[],att:{},adj:[]},d));
+  if(!await ask(`<b>استعادة نسخة${j.created?' بتاريخ '+esc(new Date(j.created).toLocaleString('en-GB')):''}</b><br>موظفون: ${o.emp.length} — سجلات حضور: ${Object.keys(o.att).length} — خصومات/مكافآت/سلف: ${o.adj.length}<br>الحالي: ${D.emp.length} موظف، ${Object.keys(D.att).length} سجل حضور.<br><b class="neg">ستُستبدل كل البيانات الحالية بالكامل ولا يمكن التراجع.</b>`))return;
+  D=o;save();R();msg('تمت الاستعادة بنجاح.')}catch(e){msg('ملف النسخة غير صالح أو تالف.',1)}
+}
+function dl(){
+ D.meta.lastBackup=new Date().toISOString();save();
+ const b=new Blob([JSON.stringify({app:'lion-auto',v:2,created:D.meta.lastBackup,data:D},null,1)],{type:'application/json'}),a=document.createElement('a');
+ a.href=URL.createObjectURL(b);a.download='lion-auto-backup-'+D.meta.lastBackup.slice(0,16).replace(/[:T]/g,'-')+'.json';document.body.appendChild(a);a.click();a.remove();
+ msg('تم إنشاء النسخة الاحتياطية. إن لم يبدأ التنزيل في متصفحك استخدم النسخ النصي.');
+}
+function addH(){const d=$('#hdt').value,n=$('#hnm').value.trim();if(!vd(d)||!n)return msg('اكتب تاريخًا صالحًا واسم العطلة.',1);if(D.hol.some(h=>h.d===d))return msg('هذا التاريخ مسجّل كعطلة بالفعل.',1);D.hol.push({d,n});save();R();msg('تمت إضافة العطلة.')}
+async function delH(d){if(!await ask('حذف العطلة بتاريخ '+esc(d)+'؟'))return;D.hol=D.hol.filter(h=>h.d!==d);save();R();msg('تم الحذف.')}
+function setS(k,el){
+ const L={grace:[0,600],otMult:[0,10],otMin:[0,600],lateMult:[0,10],div:[1,31]};let v;
+ if(el.type==='time'){v=el.value;const o=k==='dStart'?D.set.dEnd:D.set.dStart;if(!vt(v)||v===o){el.value=D.set[k];return msg('وقت غير صالح (البداية والنهاية يجب أن تختلفا).',1)}}
+ else{v=+el.value;const r=L[k];if(el.value===''||isNaN(v)||v<r[0]||v>r[1]){el.value=D.set[k];return msg('قيمة غير صالحة: يجب أن تكون بين '+r[0]+' و'+r[1]+'.',1)}}
+ D.set[k]=v;save();msg('تم حفظ الإعداد.');
+}
+function stage(NE,NA,pdf){
+ const ks=Object.keys(NA),nw=[],cf=[];let same=0;
+ ks.forEach(k=>{const o=D.att[k],n=NA[k];if(!o)nw.push(k);else if(o.in===n.in&&o.out===n.out)same++;else cf.push(k)});
+ if(!NE.length&&!ks.length)return msg('لم يتم العثور على موظفين أو سجلات حضور في الملف.',1);
+ STG={NE,NA,nw,cf};
+ $('#dlg').innerHTML=`<h3>معاينة الاستيراد</h3><p>موظفون جدد: <b>${NE.length}</b><br>سجلات حضور جديدة: <b>${nw.length}</b><br>مطابقة لسجلات موجودة (تُتجاهل): ${same}<br>متعارضة مع سجلات موجودة: <b class="neg">${cf.length}</b></p>${pdf?'<p class="hint">⚠ أوقات تقرير PDF بنظام 12 ساعة بدون صباحًا/مساءً، وتم استنتاج الفترة من ترتيب البصمات، ومواعيد الدوام وتاريخ التعيين مقدّرة. راجع النتيجة بعد الاستيراد (تبويب «بصمات ناقصة»).</p>':''}${cf.length?`<div class="tw" style="max-height:200px;overflow:auto"><table><tr><th>الموظف / التاريخ</th><th>الحالي</th><th>الجديد</th></tr>${cf.slice(0,30).map(k=>{const o=D.att[k],n=NA[k];return `<tr><td>${esc(k.replace('|',' / '))}</td><td>${o.in||'-'} ← ${o.out||'-'}</td><td>${n.in||'-'} ← ${n.out||'-'}</td></tr>`}).join('')}</table></div>${cf.length>30?'<p class="hint">يظهر أول 30 تعارضًا فقط.</p>':''}`:''}<p class="np"><button class="p" data-a="applyStg" data-p="0">استيراد الجديد فقط</button>${cf.length?' <button class="p" style="background:var(--bad);color:#fff" data-a="applyStg" data-p="1">استيراد واستبدال المتعارض</button>':''} <button class="p" onclick="dlg.close()">إلغاء</button></p>`;
+ dlg.showModal();
+}
+function applyStg(ow){
+ const g=STG;if(!g)return;g.NE.forEach(e=>D.emp.push(e));const set=ow==='1'?g.nw.concat(g.cf):g.nw;set.forEach(k=>D.att[k]=g.NA[k]);
+ lg('استيراد حضور','ملف',null,set.length+' سجل',ow==='1'?'مع استبدال '+g.cf.length+' متعارض':'');STG=null;save();dlg.close();R();
+ msg(`تم الاستيراد: ${g.NE.length} موظف جديد و${g.nw.length} سجل جديد`+(ow==='1'?`، واستُبدل ${g.cf.length} متعارض`:g.cf.length?`، وتُرك ${g.cf.length} متعارض دون تغيير`:'')+'. رواتب الموظفين الجدد = 0، راجعها.');
+}
 $('#mon').value=ymd(new Date()).slice(0,7);$('#mon').onchange=R;R();
 </script>
 </body>
