@@ -119,7 +119,7 @@ tbody tr:nth-child(even) td{background-color:rgba(255,255,255,.012)}
 <nav id="nav"></nav><div id="msg"></div><main id="app"></main><dialog id="dlg"></dialog><dialog id="cf"></dialog>
 <script>
 const $=s=>document.querySelector(s),K='lionauto_v1',pad=n=>String(n).padStart(2,'0');
-let D={emp:[],att:{},adj:[],set:{grace:10,otMult:0,otMin:30,lateMult:1,absMult:1,div:30,off:5,ins:0,dStart:'09:00',dEnd:'17:00'}};
+let D={emp:[],att:{},adj:[],set:{grace:10,otMult:0,otMin:30,lateMult:1,absMult:1,earlyMode:'half',earlyThr:30,tierOn:0,tiers:'15:0,30:0.25,9999:0.5',freeLate:0,round:0,div:30,off:5,ins:0,dStart:'09:00',dEnd:'17:00'}};
 const DS=Object.assign({},D.set);
 try{const s=localStorage.getItem(K);if(s)D=Object.assign(D,JSON.parse(s))}catch(e){}
 D=migrate(D);
@@ -133,46 +133,49 @@ const vd=s=>/^\d{4}-\d{2}-\d{2}$/.test(s)&&ymd(new Date(s+'T00:00:00'))===s,vt=s
 const act=()=>D.emp.filter(e=>!e.arch);let showArch=false,STG=null;
 function ask(t){return new Promise(r=>{const c=$('#cf');c.innerHTML=`<p>${t}</p><p class="np"><button class="p" id="cy">تأكيد</button> <button class="p" id="cn">إلغاء</button></p>`;c.showModal();$('#cy').onclick=()=>{c.close();r(true)};$('#cn').onclick=()=>{c.close();r(false)};c.oncancel=()=>r(false)})}
 function lg(t,k,o,n,w){D.log.unshift({d:new Date().toISOString(),t,k,o,n,w:w||''});D.log.length=Math.min(D.log.length,500)}
-function migrate(o){o.set=Object.assign({},DS,o.set||{});o.emp=(o.emp||[]).map(e=>Object.assign({},e,{id:String(e.id),arch:e.arch?1:0,salary:+e.salary||0}));o.att=o.att||{};o.adj=o.adj||[];o.hol=o.hol||[];o.log=o.log||[];o.meta=o.meta||{};o.lt=o.lt||{};o.v=2;return o}
+function migrate(o){o.set=Object.assign({},DS,o.set||{});o.emp=(o.emp||[]).map(e=>Object.assign({},e,{id:String(e.id),arch:e.arch?1:0,salary:+e.salary||0}));o.att=o.att||{};o.adj=o.adj||[];o.hol=o.hol||[];o.log=o.log||[];o.meta=o.meta||{};o.lt=o.lt||{};o.lock=o.lock||{};o.pay=o.pay||{};o.inst=o.inst||[];o.sh=o.sh||[];o.v=2;return o}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(b&&typeof window[b.dataset.a]==='function')window[b.dataset.a](b.dataset.p,b.dataset.q)});
 const E=id=>D.emp.find(e=>e.id==id),M=()=>$('#mon').value;
 const msg=(t,bad)=>{const m=$('#msg');m.textContent=t;m.style.color=bad?'var(--bad)':'var(--ok)'};
 const opts=()=>act().map(e=>`<option value="${esc(e.id)}">${esc(e.name)} (${esc(e.id)})</option>`).join('');
 const inp=(id,l,t='text',v='')=>`<label>${l}<input id="${id}" type="${t}" value="${esc(v)}"></label>`;
 const ST={present:'حاضر',absent:'غياب',leave:'إجازة مدفوعة',half:'نصف يوم',unpaid:'إجازة غير مدفوعة'};
-const T=[['home','الرئيسية'],['emp','الموظفون'],['att','الحضور والانصراف'],['chk','بصمات ناقصة'],['adj','مكافآت وخصومات'],['pay','المرتبات'],['set','الإعدادات']];
+const T=[['home','الرئيسية'],['emp','الموظفون'],['att','الحضور والانصراف'],['cal','التقويم'],['chk','بصمات ناقصة'],['adj','مكافآت وخصومات'],['pay','المرتبات'],['set','الإعدادات']];
 let tab='home',fe='';
 
 function calc(e,m){
  const S=D.set,p=m.split('-').map(Number),n=new Date(p[0],p[1],0).getDate(),today=ymd(new Date());
  const en=tm(e.end)+(tm(e.end)<=tm(e.start)?1440:0),daily=e.salary/S.div,hr=daily/Math.max(1,(en-tm(e.start))/60);
- let pres=0,abs=0,lv=0,ul=0,late=0,ot=0;const H={};D.hol.forEach(h=>H[h.d]=1);
+ let pres=0,abs=0,lv=0,ul=0,late=0,ot=0,wk=0,lc=0,lf=0,ea=0;const aD=[],hD=[],TR=String(S.tiers||'').split(',').map(x=>x.split(':').map(Number)).filter(a=>a.length==2&&!a.some(isNaN)).sort((a,b)=>a[0]-b[0]),tv=l=>{const t=TR.find(a=>l<=a[0]);return t?t[1]:TR.length?TR[TR.length-1][1]:0};const H={};D.hol.forEach(h=>H[h.d]=1);
  for(let d=1;d<=n;d++){
   const dt=m+'-'+pad(d),wd=new Date(p[0],p[1]-1,d).getDay(),r=D.att[e.id+'|'+dt];
   if(dt>today||(e.hd&&dt<e.hd))continue;
   if(r&&r.st==='leave'){lv++;continue}
   if(r&&r.st==='unpaid'){ul++;continue}
-  if(r&&r.st==='absent'){abs++;continue}
-  if(r&&r.st==='half'){pres+=.5;abs+=.5;continue}
+  if(r&&r.st==='absent'){abs++;aD.push(dt);continue}
+  if(r&&r.st==='half'){pres+=.5;abs+=.5;hD.push(dt);continue}
   if(r&&(r.in||r.out||r.st==='present')){
+   const sh=shf(e,r),en=sh[1],o=r.out?tm(r.out)+(r.nx?1440:0):0,em=r.out?Math.max(0,en-o):0,mode=em>S.earlyThr?(r.el||S.earlyMode):'';
+   if(r.in&&r.out)wk+=Math.max(0,o-tm(r.in));
+   if(mode==='half'){pres+=.5;abs+=.5;hD.push(dt);continue}
    pres++;
-   if(r.in){const l=tm(r.in)-tm(e.start);if(l>S.grace)late+=l}
-   if(r.out){const o=tm(r.out)+(r.nx?1440:0);late+=Math.max(0,en-o);const x=o-en;if(x>=S.otMin)ot+=x}
+   if(r.in){const l=tm(r.in)-sh[0];if(l>S.grace){late+=l;lc++;if(S.tierOn&&lc>S.freeLate)lf+=tv(l)}}
+   if(r.out){if(mode!=='none'){late+=em;ea+=em}const x=o-en;if(x>=S.otMin)ot+=x}
   }else if(wd===S.off||H[dt])lv++;
-  else if(dt<today)abs++;
+  else if(dt<today){abs++;aD.push(dt)}
  }
  const a=D.adj.filter(x=>x.emp==e.id&&x.date.startsWith(m)),sum=t=>a.filter(x=>x.type===t).reduce((s,x)=>s+x.amt,0);
- const adv=sum('advance'),cd=sum('deduct'),cb=sum('bonus');
- const ov=(D.lt||{})[e.id+'|'+m],lm=ov&&ov.m!=null?ov.m:late,dLate=ov&&ov.a!=null?ov.a:lm/60*hr*S.lateMult,oT=ot/60*hr*S.otMult,ins=+e.ins||0,insD=S.insDed?ins:0,lateDone=a.filter(x=>x.auto==='late').reduce((q,x)=>q+x.amt,0);
- const tot=pres+lv,days=Math.min(S.div,tot),dedT=cd,bonT=cb+oT;
- return{pres,lv,tot,abs,daily,days,adv,ins,insD,dedT,bonT,late:lm,lateAuto:late,autoAmt:late/60*hr*S.lateMult,manD:cd-lateDone,ul,lateOv:!!ov,dLate,lateDone,ot:ot/60,ded:dedT+adv+insD,add:bonT,net:days*daily+bonT-dedT-adv-insD};
+ const inst=(D.inst||[]).filter(p=>p.emp==e.id).reduce((q,p)=>{const k=(+m.slice(0,4)-+p.s.slice(0,4))*12+(+m.slice(5)-+p.s.slice(5));return k<0?q:q+Math.max(0,Math.min(p.per,p.tot-p.per*k))},0),adv=sum('advance')+inst,cd=sum('deduct'),cb=sum('bonus');
+ const ov=(D.lt||{})[e.id+'|'+m],lm=ov&&ov.m!=null?ov.m:late,autoD=(S.tierOn?lf*daily+ea/60*hr:late/60*hr)*S.lateMult,dLate=ov&&ov.a!=null?ov.a:(S.tierOn&&!(ov&&ov.m!=null)?autoD:lm/60*hr*S.lateMult),oT=ot/60*hr*S.otMult,ins=+e.ins||0,insD=S.insDed?ins:0,lateDone=a.filter(x=>x.auto==='late').reduce((q,x)=>q+x.amt,0);
+ const tot=pres+lv,days=Math.min(S.div,tot),dedT=cd,bonT=cb+oT,rw=days*daily+bonT-dedT-adv-insD;
+ return{pres,lv,tot,abs,daily,days,adv,ins,insD,dedT,bonT,late:lm,aD,hD,hrs:wk/60,lateAuto:late,autoAmt:autoD,manD:cd-lateDone,ul,lateOv:!!ov,dLate,lateDone,ot:ot/60,ded:dedT+adv+insD,add:bonT,inst,rawNet:rw,net:S.round>0?Math.round(rw/S.round)*S.round:rw};
 }
 
 const V={
 home(){
  const m=M(),rows=act().map(e=>calc(e,m)),t=ymd(new Date()),s=k=>rows.reduce((a,r)=>a+r[k],0);
  const pr=act().filter(e=>D.att[e.id+'|'+t]&&D.att[e.id+'|'+t].in).length;
- return `<div class="cards">${[['الموظفون',act().length],['حضور اليوم',pr],['أيام الغياب هذا الشهر',s('abs')],['إجمالي الخصومات',fm(s('ded'))],['المكافآت والإضافي',fm(s('add'))],['بصمات ناقصة',issues(m).length],['صافي المرتبات',fm(s('net'))]].map(a=>`<div class="card"><small>${a[0]}</small><b>${a[1]}</b></div>`).join('')}</div>`
+ return `<div class="cards">${[['الموظفون',act().length],['حضور اليوم',pr],['أيام الغياب هذا الشهر',s('abs')],['إجمالي الخصومات',fm(s('ded'))],['المكافآت والإضافي',fm(s('add'))],['بصمات ناقصة',issues(m).length],['صافي المرتبات',fm(s('net'))]].map(a=>`<div class="card"><small>${a[0]}</small><b>${a[1]}</b></div>`).join('')}</div>`+todayBox()
  +(D.emp.length?'':'<p class="hint">ابدأ بإضافة الموظفين من تبويب «الموظفون»، أو استورد ملف ZKTeco مباشرة.</p>');
 },
 emp(){
@@ -182,9 +185,19 @@ emp(){
 },
 att(){
  const m=M(),keys=Object.keys(D.att).filter(k=>k.split('|')[1].startsWith(m)&&(!fe||k.split('|')[0]==fe)).sort((a,b)=>b.split('|')[1].localeCompare(a.split('|')[1]));
- return `<div class="box"><h3>تسجيل حضور يدوي</h3><div class="g"><label>الموظف<select id="aemp">${opts()}</select></label>${inp('adt','التاريخ','date',ymd(new Date()))}${inp('ain','حضور','time')}${inp('aout','انصراف','time')}<label>الحالة<select id="ast"><option value="present">حاضر</option><option value="absent">غياب</option><option value="leave">إجازة مدفوعة</option><option value="half">نصف يوم</option><option value="unpaid">إجازة غير مدفوعة</option></select></label></div><button class="p" onclick="saveA()">حفظ</button></div>
+ return `<div class="box"><h3>تسجيل حضور يدوي</h3><div class="g"><label>الموظف<select id="aemp">${opts()}</select></label>${inp('adt','التاريخ','date',ymd(new Date()))}${inp('ain','حضور','time')}${inp('aout','انصراف','time')}<label>الحالة<select id="ast"><option value="present">حاضر</option><option value="absent">غياب</option><option value="leave">إجازة مدفوعة</option><option value="half">نصف يوم</option><option value="unpaid">إجازة غير مدفوعة</option></select></label><label>الوردية<select id="ash"><option value="">الأساسية / بدون تغيير</option><option value="-1">إلغاء الوردية المخصصة</option>${D.sh.map((x,i)=>`<option value="${i}">${esc(x.n)} (${x.s}-${x.e})</option>`).join('')}</select></label></div><button class="p" onclick="saveA()">حفظ</button></div>
+ <div class="box"><h3>تسجيل جماعي (إجازة / غياب لعدة أيام أو عدة موظفين)</h3><div class="g">${inp('bfr','من تاريخ','date')}${inp('bto','إلى تاريخ','date')}<label>الحالة<select id="bst"><option value="leave">إجازة مدفوعة</option><option value="unpaid">إجازة غير مدفوعة</option><option value="absent">غياب</option><option value="half">نصف يوم</option></select></label><label>الموظفون (Ctrl لاختيار أكثر من واحد)<select id="bemp" multiple size="4"><option value="*">كل الموظفين</option>${opts()}</select></label></div><label style="flex-direction:row;gap:6px;margin-bottom:8px"><input type="checkbox" id="bsk" checked> تخطي الإجازة الأسبوعية والعطلات الرسمية</label><button class="p" onclick="bulk()">تطبيق</button></div>
  <label style="max-width:300px;margin-bottom:10px">تصفية بالموظف<select onchange="fe=this.value;R()"><option value="">الكل</option>${opts().replace('value="'+fe+'"','value="'+fe+'" selected')}</select></label>
- <div class="tw"><table><tr><th>التاريخ</th><th>الموظف</th><th>حضور</th><th>انصراف</th><th>تأخير (د)</th><th>الحالة</th><th></th></tr>${keys.map(k=>{const q=k.split('|'),r=D.att[k],e=E(q[0]),l=e&&r.in?Math.max(0,tm(r.in)-tm(e.start)):0;return `<tr><td>${q[1]}</td><td>${esc(e?e.name:q[0])}</td><td>${r.in||'-'}</td><td>${r.out||'-'}${r.nx?' (+1)':''}</td><td class="${l>D.set.grace?'neg':''}">${l}</td><td>${ST[r.st]}</td><td><button data-a="editA" data-p="${esc(k)}">تعديل</button><button class="x" data-a="delA" data-p="${esc(k)}">حذف</button></td></tr>`}).join('')||'<tr><td colspan="7" class="hint">لا توجد سجلات في هذا الشهر. أضف يدويًا أو استورد ملف الحضور من ZKTeco من تبويب الموظفون.</td></tr>'}</table></div>`;
+ <div class="box"><h3>ملخص الحضور — شهر ${m}</h3><p class="hint">الانصراف قبل نهاية الدوام بأكثر من ${D.set.earlyThr} دقيقة يظهر بالأحمر ويُعامل حسب الإعداد الافتراضي (${{half:'نصف يوم',min:'خصم بالدقائق المتبقية',none:'بدون خصم'}[D.set.earlyMode]}) أو حسب اختيارك لكل سجل من عمود «الانصراف المبكر». الغياب = أيام العمل التي ليس لها تسجيل قبل اليوم.</p><div class="tw"><table><tr><th>الموظف</th><th>أيام الحضور</th><th>إجمالي ساعات العمل</th><th>أنصاف أيام</th><th>أيام الغياب</th><th>تواريخ الغياب</th></tr>${(fe?[E(fe)]:act()).filter(Boolean).map(e=>{const r=calc(e,m);return `<tr><td>${esc(e.name)}</td><td>${r.pres}</td><td>${hf(r.hrs)}</td><td>${r.hD.length?r.hD.length+' ('+r.hD.map(dfmt).join('، ')+')':'—'}</td><td class="${r.aD.length?'neg':''}">${r.aD.length}</td><td style="white-space:normal">${r.aD.map(dfmt).join('، ')||'—'}</td></tr>`}).join('')}</table></div></div>
+ <div class="tw"><table><tr><th>التاريخ</th><th>الموظف</th><th>حضور</th><th>انصراف</th><th>ساعات العمل</th><th>تأخير (د)</th><th>الحالة</th><th>الانصراف المبكر</th><th></th></tr>${keys.map(k=>{const q=k.split('|'),r=D.att[k],e=E(q[0]),l=e&&r.in?Math.max(0,tm(r.in)-shf(e,r)[0]):0,w=r.in&&r.out?tm(r.out)+(r.nx?1440:0)-tm(r.in):0,em=e&&r.out?Math.max(0,shf(e,r)[1]-(tm(r.out)+(r.nx?1440:0))):0,fl=em>D.set.earlyThr&&(!r.st||r.st==='present'),md=fl?(r.el||D.set.earlyMode):'';return `<tr><td>${q[1]}</td><td>${esc(e?e.name:q[0])}</td><td>${r.in||'-'}</td><td class="${fl?'neg':''}" style="${fl?'font-weight:700':''}">${r.out||'-'}${r.nx?' (+1)':''}</td><td>${w>0?hf(w/60):'-'}</td><td class="${l>D.set.grace?'neg':''}">${l}</td><td>${ST[r.st]}${md==='half'?' — نصف يوم':md==='min'?' — خصم '+em+' د':md==='none'?' — بدون خصم':''}</td><td>${fl?`<select data-c="setEl" data-p="${esc(k)}"><option value="">افتراضي</option><option value="half"${r.el=='half'?' selected':''}>نصف يوم</option><option value="min"${r.el=='min'?' selected':''}>بالدقائق (${em} د)</option><option value="none"${r.el=='none'?' selected':''}>بدون خصم</option></select>`:'-'}</td><td><button data-a="editA" data-p="${esc(k)}">تعديل</button><button class="x" data-a="delA" data-p="${esc(k)}">حذف</button></td></tr>`}).join('')||'<tr><td colspan="9" class="hint">لا توجد سجلات في هذا الشهر. أضف يدويًا أو استورد ملف الحضور من ZKTeco من تبويب الموظفون.</td></tr>'}</table></div>`;
+},
+cal(){
+ const m=M(),e=E(ce)||act()[0];if(!e)return '<p class="hint">أضف موظفين أولًا.</p>';
+ const p=m.split('-').map(Number),n=new Date(p[0],p[1],0).getDate(),f=new Date(p[0],p[1]-1,1).getDay(),c=[];
+ for(let i=0;i<f;i++)c.push('<div></div>');
+ for(let d=1;d<=n;d++){const dt=m+'-'+pad(d),x=dayInfo(e,dt);c.push(`<div data-a="calDay" data-p="${esc(e.id+'|'+dt)}" style="cursor:pointer;min-height:64px;padding:4px;border:1px solid var(--bd);border-radius:6px;background:${CC[x[0]]||'transparent'};font-size:12px"><b>${d}</b><br>${esc(x[1])}</div>`)}
+ const r=calc(e,m);
+ return `<label style="max-width:320px;margin-bottom:10px">الموظف<select onchange="ce=this.value;R()">${act().map(o=>`<option value="${esc(o.id)}"${o.id==e.id?' selected':''}>${esc(o.name)}</option>`).join('')}</select></label><div class="box"><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center">${wdn.map(w=>`<b class="hint">${w}</b>`).join('')}${c.join('')}</div><p class="hint" style="margin-top:12px">${Object.keys(CT).map(k=>`<span style="background:${CC[k]};padding:2px 8px;border-radius:4px;margin-inline-end:6px">${CT[k]}</span>`).join('')}<br>اضغط على أي يوم لتسجيله أو تعديله. حضور ${r.pres} — ساعات ${hf(r.hrs)} — غياب ${r.aD.length}</p></div>`;
 },
 chk(){
  const L=issues(M());
@@ -193,17 +206,19 @@ chk(){
 adj(){
  const m=M(),L={bonus:'مكافأة',deduct:'خصم',advance:'سلفة'};
  return `<div class="box"><h3>مكافأة / خصم / سلفة</h3><div class="g"><label>الموظف<select id="xemp">${opts()}</select></label>${inp('xdt','التاريخ','date',ymd(new Date()))}<label>النوع<select id="xty"><option value="bonus">مكافأة</option><option value="deduct">خصم</option><option value="advance">سلفة</option></select></label>${inp('xam','المبلغ','number')}${inp('xnt','السبب / ملاحظة')}</div><button class="p" onclick="saveX()">إضافة</button></div>
+ <div class="box"><h3>تقسيط سلفة</h3><p class="hint">يُخصم القسط تلقائيًا كل شهر من الشهر المحدد حتى اكتمال المبلغ، ويظهر ضمن عمود «سلف».</p><div class="g"><label>الموظف<select id="iemp">${opts()}</select></label>${inp('itot','إجمالي السلفة','number')}${inp('iper','القسط الشهري','number')}${inp('ist','بداية الخصم','month',m)}</div><button class="p" onclick="addI()">إضافة تقسيط</button>${D.inst.length?`<div class="tw" style="margin-top:10px"><table><tr><th>الموظف</th><th>الإجمالي</th><th>القسط</th><th>من</th><th>المتبقي بنهاية ${m}</th><th></th></tr>${D.inst.map((p,i)=>{const e=E(p.emp),k=(+m.slice(0,4)-+p.s.slice(0,4))*12+(+m.slice(5)-+p.s.slice(5));return `<tr><td>${esc(e?e.name:p.emp)}</td><td>${fm(p.tot)}</td><td>${fm(p.per)}</td><td>${p.s}</td><td>${fm(Math.min(p.tot,Math.max(0,p.tot-p.per*(k+1))))}</td><td><button class="x" data-a="delI" data-p="${i}">حذف</button></td></tr>`}).join('')}</table></div>`:''}</div>
  <div class="tw"><table><tr><th>التاريخ</th><th>الموظف</th><th>النوع</th><th>المبلغ</th><th>ملاحظة</th><th></th></tr>${D.adj.map((x,i)=>[x,i]).filter(a=>a[0].date.startsWith(m)).map(a=>{const x=a[0],e=E(x.emp);return `<tr><td>${x.date}</td><td>${esc(e?e.name:x.emp)}</td><td>${L[x.type]}</td><td>${fm(x.amt)}</td><td>${esc(x.note)}</td><td><button class="x" data-a="delX" data-p="${a[1]}">حذف</button></td></tr>`}).join('')||'<tr><td colspan="6" class="hint">لا توجد حركات في هذا الشهر</td></tr>'}</table></div>`;
 },
 pay(){
- const m=M(),R_=act().map(e=>[e,calc(e,m)]),s=k=>R_.reduce((a,r)=>a+r[1][k],0),bs=act().reduce((a,e)=>a+e.salary,0);
- const h=['الاسم','الوظيفة','المرتب الأساسي','سلف','تأمينات','يومية','الحضور الفعلي','الحضور','غياب','إجازة بدون أجر','التأخير (د)','خصم التأخير','نقدية خصومات','نقدية مكافآت','صافي المرتب'];
- return `${issues(m).length?`<p class="np" style="color:var(--bad)">⚠ يوجد ${issues(m).length} بصمة ناقصة في هذا الشهر قد تؤثر على الحساب. <button class="p" onclick="tab='chk';R()">مراجعتها</button></p>`:''}<p class="np"><button class="p" onclick="runLate()">تنفيذ خصومات التأخير</button> <button class="p" onclick="print()">طباعة كشف المرتبات</button></p><div class="tw"><table><tr>${h.map(x=>`<th>${x}</th>`).join('')}<th class="np"></th></tr>${R_.map(a=>{const e=a[0],r=a[1];return `<tr><td>${esc(e.name)}</td><td>${esc(e.title)}</td><td>${fm(e.salary)}</td><td>${fm(r.adv)}</td><td>${r.ins?fm(r.ins):'-'}</td><td>${fm(r.daily)}</td><td>${r.pres}</td><td>${r.tot}</td><td class="${r.abs?'neg':''}">${r.abs}</td><td>${r.ul}</td><td class="${r.late?'neg':''}">${r.late}${r.lateOv?' ✎':''}</td><td>${r.lateDone?'<span style="color:var(--ok)">✓ '+fm(r.lateDone)+'</span>':fm(r.dLate)}</td><td>${fm(r.manD)}</td><td>${fm(r.bonT)}</td><td><b>${fm(r.net)}</b></td><td class="np"><button data-a="editLate" data-p="${esc(e.id)}">تعديل</button><button data-a="slip" data-p="${esc(e.id)}">قسيمة</button></td></tr>`}).join('')}<tfoot><tr><td>الإجمالي</td><td></td><td>${fm(bs)}</td><td>${fm(s('adv'))}</td><td>${fm(s('ins'))}</td><td></td><td>${s('pres')}</td><td>${s('tot')}</td><td>${s('abs')}</td><td>${s('ul')}</td><td>${s('late')}</td><td>${fm(s('dLate'))}</td><td>${fm(s('manD'))}</td><td>${fm(s('bonT'))}</td><td>${fm(s('net'))}</td><td class="np"></td></tr></tfoot></table></div>
+ const m=M(),R_=act().map(e=>[e,calc(e,m)]),s=k=>R_.reduce((a,r)=>a+r[1][k],0),bs=act().reduce((a,e)=>a+e.salary,0),paid=R_.reduce((q,a)=>{const p=D.pay[m+'|'+a[0].id];return q+(p?p.a:0)},0);
+ const h=['الاسم','الوظيفة','المرتب الأساسي','سلف','تأمينات','يومية','الحضور الفعلي','الحضور','غياب','إجازة بدون أجر','التأخير (د)','خصم التأخير','نقدية خصومات','نقدية مكافآت','صافي المرتب','الصرف'];
+ return `${issues(m).length?`<p class="np" style="color:var(--bad)">⚠ يوجد ${issues(m).length} بصمة ناقصة في هذا الشهر قد تؤثر على الحساب. <button class="p" onclick="tab='chk';R()">مراجعتها</button></p>`:''}<p class="hint">المصروف: ${fm(paid)} من ${fm(s('net'))} — المتبقي: ${fm(s('net')-paid)} ${D.lock[m]?'| 🔒 الشهر مقفل':''}</p><p class="np"><button class="p" data-a="lockM">${D.lock[m]?'فتح الشهر':'إقفال الشهر'}</button> <button class="p" onclick="runLate()">تنفيذ خصومات التأخير</button> <button class="p" onclick="print()">طباعة كشف المرتبات</button></p><div class="tw"><table><tr>${h.map(x=>`<th>${x}</th>`).join('')}<th class="np"></th></tr>${R_.map(a=>{const e=a[0],r=a[1];return `<tr><td>${esc(e.name)}</td><td>${esc(e.title)}</td><td>${fm(e.salary)}</td><td>${fm(r.adv)}</td><td>${r.ins?fm(r.ins):'-'}</td><td>${fm(r.daily)}</td><td>${r.pres}</td><td>${r.tot}</td><td class="${r.abs?'neg':''}">${r.abs}</td><td>${r.ul}</td><td class="${r.late?'neg':''}">${r.late}${r.lateOv?' ✎':''}</td><td>${r.lateDone?'<span style="color:var(--ok)">✓ '+fm(r.lateDone)+'</span>':fm(r.dLate)}</td><td>${fm(r.manD)}</td><td>${fm(r.bonT)}</td><td><b>${fm(r.net)}</b></td><td>${pc(e.id,r)}</td><td class="np"><button data-a="editLate" data-p="${esc(e.id)}">تعديل</button><button data-a="slip" data-p="${esc(e.id)}">قسيمة</button></td></tr>`}).join('')}<tfoot><tr><td>الإجمالي</td><td></td><td>${fm(bs)}</td><td>${fm(s('adv'))}</td><td>${fm(s('ins'))}</td><td></td><td>${s('pres')}</td><td>${s('tot')}</td><td>${s('abs')}</td><td>${s('ul')}</td><td>${s('late')}</td><td>${fm(s('dLate'))}</td><td>${fm(s('manD'))}</td><td>${fm(s('bonT'))}</td><td>${fm(s('net'))}</td><td></td><td class="np"></td></tr></tfoot></table></div>
  <p class="hint">الصافي = أيام الحضور المحتسبة × اليومية − السلف − نقدية الخصومات + نقدية المكافآت. الإجازة الأسبوعية تُحتسب مدفوعة تلقائيًا، وأي إجازة أخرى تُسجَّل من تبويب الحضور بحالة «إجازة مدفوعة». الحساب حتى تاريخ اليوم في الشهر الحالي. التأخير = تأخر الحضور + الانصراف المبكر. «نقدية خصومات» هي الخصومات اليدوية فقط، وخصم التأخير المنفّذ يظهر في عموده المستقل (والصافي يشملهما). الإجازة غير المدفوعة والغياب لا يُحتسبان ضمن الأيام المدفوعة، والعطلات الرسمية تُحتسب مدفوعة. زر «تنفيذ خصومات التأخير» يحوّله إلى خصم نقدي (ويمكن إعادة تنفيذه بعد أي تعديل)، وزر «تعديل» يغيّر دقائق التأخير أو قيمة الخصم للموظف.</p>`;
 },
 set(){
  const n=(k,l)=>`<label>${l}<input type="number" step="any" value="${D.set[k]}" onchange="setS('${k}',this)"></label>`,tt=(k,l)=>`<label>${l}<input type="time" value="${D.set[k]}" onchange="setS('${k}',this)"></label>`;
- return `<div class="box"><h3>قواعد الحساب</h3><div class="g">${n('grace','سماحية التأخير (دقيقة)')}${n('lateMult','معامل خصم التأخير')}${n('otMult','معامل الساعة الإضافية')}${n('otMin','أقل مدة تُحتسب إضافي (دقيقة)')}${n('div','قسمة الراتب لليوم (أيام)')}<label>خصم التأمينات من الصافي<select onchange="D.set.insDed=+this.value;save()"><option value="0">لا (عرض فقط)</option><option value="1"${D.set.insDed?' selected':''}>نعم</option></select></label><label>الإجازة الأسبوعية<select onchange="D.set.off=+this.value;save()">${['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'].map((d,i)=>`<option value="${i}"${i==D.set.off?' selected':''}>${d}</option>`).join('')}</select></label>${tt('dStart','بداية الدوام الافتراضي')}${tt('dEnd','نهاية الدوام الافتراضي')}</div></div>
+ return `<div class="box"><h3>قواعد الحساب</h3><div class="g">${n('grace','سماحية التأخير (دقيقة)')}${n('lateMult','معامل خصم التأخير')}${n('otMult','معامل الساعة الإضافية')}${n('otMin','أقل مدة تُحتسب إضافي (دقيقة)')}${n('earlyThr','حد الانصراف المبكر (دقيقة قبل نهاية الدوام)')}<label>معاملة الانصراف المبكر<select onchange="D.set.earlyMode=this.value;save();msg('تم حفظ الإعداد.')"><option value="half"${D.set.earlyMode=='half'?' selected':''}>نصف يوم</option><option value="min"${D.set.earlyMode=='min'?' selected':''}>خصم بالدقائق المتبقية من اليوم</option><option value="none"${D.set.earlyMode=='none'?' selected':''}>بدون خصم</option></select></label><label>شرائح التأخير<select onchange="D.set.tierOn=+this.value;save();msg('تم حفظ الإعداد.')"><option value="0">تعطيل (خصم بالدقائق)</option><option value="1"${D.set.tierOn?' selected':''}>تفعيل (بالأيام)</option></select></label><label>الشرائح (دقائق:جزء من اليوم)<input value="${esc(D.set.tiers)}" onchange="setT(this)"></label>${n('freeLate','تأخيرات مسموحة شهريًا (مع الشرائح)')}<label>تقريب الصافي<select onchange="D.set.round=+this.value;save();msg('تم حفظ الإعداد.')"><option value="0">بدون</option><option value="5"${D.set.round==5?' selected':''}>لأقرب 5</option><option value="10"${D.set.round==10?' selected':''}>لأقرب 10</option></select></label>${n('div','قسمة الراتب لليوم (أيام)')}<label>خصم التأمينات من الصافي<select onchange="D.set.insDed=+this.value;save()"><option value="0">لا (عرض فقط)</option><option value="1"${D.set.insDed?' selected':''}>نعم</option></select></label><label>الإجازة الأسبوعية<select onchange="D.set.off=+this.value;save()">${['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'].map((d,i)=>`<option value="${i}"${i==D.set.off?' selected':''}>${d}</option>`).join('')}</select></label>${tt('dStart','بداية الدوام الافتراضي')}${tt('dEnd','نهاية الدوام الافتراضي')}</div></div>
+ <div class="box"><h3>الورديات</h3><p class="hint">عرّف ورديات (صباحي، ليلي...) واختر الوردية لأي سجل من نموذج تسجيل الحضور. بدون اختيار تُستخدم وردية الموظف الأساسية.</p><div class="g">${inp('shn','اسم الوردية')}${inp('shs','بداية','time')}${inp('she','نهاية','time')}</div><button class="p" onclick="addS()">إضافة وردية</button><div class="tw" style="margin-top:10px"><table>${D.sh.map((x,i)=>`<tr><td>${esc(x.n)}</td><td>${x.s} - ${x.e}</td><td><button class="x" data-a="delS" data-p="${i}">حذف</button></td></tr>`).join('')||'<tr><td class="hint">لا توجد ورديات</td></tr>'}</table></div></div>
  <div class="box"><h3>العطلات الرسمية</h3><p class="hint">تُستثنى من الغياب وتُحتسب مدفوعة (مثل الإجازة الأسبوعية).</p><div class="g">${inp('hdt','التاريخ','date')}${inp('hnm','الاسم')}</div><button class="p" onclick="addH()">إضافة عطلة</button><div class="tw" style="margin-top:10px"><table>${D.hol.slice().sort((a,b)=>a.d.localeCompare(b.d)).map(h=>`<tr><td>${h.d}</td><td>${esc(h.n)}</td><td><button class="x" data-a="delH" data-p="${esc(h.d)}">حذف</button></td></tr>`).join('')||'<tr><td class="hint">لا توجد عطلات</td></tr>'}</table></div></div>
  <div class="box"><h3>سجل التعديلات (آخر 30)</h3><p class="hint">يسجّل التوقيت والقيم السابقة والجديدة والسبب. لا يسجّل هوية المستخدم لأن التطبيق لا يعتمد على حسابات.</p><div class="tw"><table><tr><th>الوقت</th><th>الإجراء</th><th>البند</th><th>قبل</th><th>بعد</th><th>السبب</th></tr>${D.log.slice(0,30).map(x=>`<tr><td>${new Date(x.d).toLocaleString('en-GB')}</td><td>${esc(x.t)}</td><td>${esc(x.k)}</td><td>${esc(x.o==null?'-':x.o)}</td><td>${esc(x.n==null?'-':x.n)}</td><td>${esc(x.w)}</td></tr>`).join('')||'<tr><td class="hint">لا توجد تعديلات</td></tr>'}</table></div></div>
  <div class="box"><h3>نسخة احتياطية</h3><p class="np"><button class="p" onclick="dl()">تنزيل نسخة احتياطية (JSON)</button> <label class="b" style="display:inline-block;color:var(--onb)">استعادة من ملف<input type="file" hidden accept=".json,application/json" onchange="rfile(this.files[0])"></label></p><p class="hint">${D.meta.lastBackup?'آخر نسخة تم تنزيلها من هذا المتصفح: '+new Date(D.meta.lastBackup).toLocaleString('en-GB'):'لم يتم تنزيل نسخة من هذا المتصفح بعد.'} البيانات محلية في متصفحك ولا تُزامَن تلقائيًا بين الأجهزة.</p><p class="hint">البيانات محفوظة في متصفح هذا الجهاز فقط. انسخ النص واحفظه للاحتفاظ بنسخة أو للنقل لجهاز آخر.</p><textarea id="bk" rows="4" style="width:100%"></textarea><br><button class="p" onclick="bk.value=JSON.stringify(D);bk.select()">عرض النسخة</button> <button class="p" onclick="rest()">استعادة من النص</button></div>`;
@@ -241,19 +256,19 @@ function saveA(){
  if(!id)return msg('اختر الموظف.',1);if(!vd(d))return msg('التاريخ غير صالح.',1);
  if((ai&&!vt(ai))||(ao&&!vt(ao)))return msg('وقت الحضور أو الانصراف غير صالح.',1);
  if(st==='present'&&!ai&&!ao)return msg('اكتب وقت الحضور أو الانصراف، أو غيّر الحالة.',1);
- D.att[id+'|'+d]={in:ai,out:ao,nx:ai&&ao&&tm(ao)<tm(ai)?1:0,st};save();R();msg('تم حفظ سجل الحضور.');
+ const old=D.att[id+'|'+d];if(gl(d))return;const av=$('#ash').value,sx=D.sh[av],ak=id+'|'+d;D.att[ak]={in:ai,out:ao,nx:ai&&ao&&tm(ao)<tm(ai)?1:0,st};if(sx){D.att[ak].ss=sx.s;D.att[ak].se=sx.e}else if(old&&old.ss&&av!=='-1'){D.att[ak].ss=old.ss;D.att[ak].se=old.se}if(old&&old.el)D.att[id+'|'+d].el=old.el;save();R();msg('تم حفظ سجل الحضور.');
 }
-function editA(k){const q=k.split('|'),r=D.att[k];$('#aemp').value=q[0];$('#adt').value=q[1];$('#ain').value=r.in||'';$('#aout').value=r.out||'';$('#ast').value=r.st;scrollTo(0,0)}
-async function delA(k){if(!await ask('حذف سجل الحضور؟'))return;delete D.att[k];save();R();msg('تم حذف السجل.')}
+function editA(k){const q=k.split('|'),r=D.att[k];$('#aemp').value=q[0];$('#adt').value=q[1];$('#ain').value=r.in||'';$('#aout').value=r.out||'';$('#ast').value=r.st;const ix=r.ss?D.sh.findIndex(x=>x.s===r.ss&&x.e===r.se):-1;$('#ash').value=ix>=0?String(ix):'';scrollTo(0,0)}
+async function delA(k){if(gl(k.split('|')[1]))return;if(!await ask('حذف سجل الحضور؟'))return;delete D.att[k];save();R();msg('تم حذف السجل.')}
 function saveX(){
  const id=$('#xemp').value,a=$('#xam').value,d=$('#xdt').value,ty=$('#xty').value,nt=$('#xnt').value.trim();
  if(!id)return msg('اختر الموظف.',1);if(!(+a>0))return msg('المبلغ يجب أن يكون رقمًا أكبر من صفر.',1);if(!vd(d))return msg('التاريخ غير صالح.',1);
- D.adj.push({emp:id,date:d,type:ty,amt:+a,note:nt});lg('إضافة '+{bonus:'مكافأة',deduct:'خصم',advance:'سلفة'}[ty],id+' '+d,null,+a,nt);save();R();msg('تمت الإضافة.');
+ if(gl(d))return;D.adj.push({emp:id,date:d,type:ty,amt:+a,note:nt});lg('إضافة '+{bonus:'مكافأة',deduct:'خصم',advance:'سلفة'}[ty],id+' '+d,null,+a,nt);save();R();msg('تمت الإضافة.');
 }
-async function delX(i){const x=D.adj[+i];if(!x||!await ask('حذف هذا البند ('+fm(x.amt)+')؟'))return;lg('حذف بند',x.emp+' '+x.date,x.amt,null,x.note);D.adj.splice(+i,1);save();R();msg('تم الحذف.')}
+async function delX(i){const x=D.adj[+i];if(x&&gl(x.date))return;if(!x||!await ask('حذف هذا البند ('+fm(x.amt)+')؟'))return;lg('حذف بند',x.emp+' '+x.date,x.amt,null,x.note);D.adj.splice(+i,1);save();R();msg('تم الحذف.')}
 function slip(id){
  const e=E(id),r=calc(e,M());
- $('#dlg').innerHTML=`<h3>Lion Auto | قسيمة مرتب ${M()}</h3><p>${esc(e.name)} — كود ${esc(e.id)}<br>${esc(e.dept)} ${esc(e.title)}</p><table>${[['الراتب الأساسي',e.salary],['اليومية',r.daily],['أيام محتسبة ('+r.tot+' يوم، غياب '+r.abs+(r.ul?'، إجازة بدون أجر '+r.ul:'')+')',r.days*r.daily],['مكافآت وإضافي',r.bonT],['خصم يدوي',-r.manD],['خصم تأخير منفّذ',-r.lateDone],['سلف',-r.adv],['تأمينات',-r.insD]].map(a=>`<tr><td>${a[0]}</td><td class="${a[1]<0?'neg':''}">${fm(a[1])}</td></tr>`).join('')}<tr><th>الصافي</th><th>${fm(r.net)}</th></tr></table><p class="np"><button class="p" onclick="document.body.classList.add('pp');print();document.body.classList.remove('pp')">طباعة</button> <button class="p" onclick="dlg.close()">إغلاق</button></p>`;
+ $('#dlg').innerHTML=`<h3>Lion Auto | قسيمة مرتب ${M()}</h3><p>${esc(e.name)} — كود ${esc(e.id)}<br>${esc(e.dept)} ${esc(e.title)}</p><table>${[['الراتب الأساسي',e.salary],['اليومية',r.daily],['أيام محتسبة ('+r.tot+' يوم، غياب '+r.abs+(r.ul?'، إجازة بدون أجر '+r.ul:'')+')',r.days*r.daily],['مكافآت وإضافي',r.bonT],['خصم يدوي',-r.manD],['خصم تأخير منفّذ',-r.lateDone],['سلف',-r.adv],['تأمينات',-r.insD],...(r.net!==r.rawNet?[['تقريب',r.net-r.rawNet]]:[])].map(a=>`<tr><td>${a[0]}</td><td class="${a[1]<0?'neg':''}">${fm(a[1])}</td></tr>`).join('')}<tr><th>الصافي</th><th>${fm(r.net)}</th></tr></table><p class="np"><button class="p" onclick="document.body.classList.add('pp');print();document.body.classList.remove('pp')">طباعة</button> <button class="p" onclick="dlg.close()">إغلاق</button></p>`;
  dlg.showModal();
 }
 function pd(s){
@@ -341,7 +356,7 @@ function editLate(id){
  $('#dlg').innerHTML=`<h3>تعديل التأخير — ${esc(e.name)}</h3><table><tr><td>المحسوب تلقائيًا</td><td>${r.lateAuto} دقيقة — ${fm(r.autoAmt)}</td></tr><tr><td>المعتمد حاليًا</td><td>${r.late} دقيقة — ${fm(r.dLate)} ${r.lateOv?'(معدّل يدويًا)':''}</td></tr></table><div class="g">${inp('lmin','دقائق التأخير الجديدة','number',r.late)}${inp('lamt','قيمة الخصم (فارغة = تلقائي)','number',o.a==null?'':o.a)}${inp('lwhy','سبب التعديل (مطلوب)','text',o.w||'')}</div><p id="lerr" class="neg"></p><p class="np"><button class="p" data-a="saveLate" data-p="${esc(id)}">حفظ</button> <button class="p" data-a="saveLate" data-p="${esc(id)}" data-q="1">رجوع للتلقائي</button> <button class="p" onclick="dlg.close()">إغلاق</button></p>`;
  dlg.showModal();
 }
-function saveLate(id,auto){
+function saveLate(id,auto){if(gl(M())){dlg.close();return}
  const k=id+'|'+M(),e=E(id),r=calc(e,M()),w=$('#lwhy').value.trim(),m=+$('#lmin').value,a=$('#lamt').value,er=t=>{$('#lerr').textContent=t};
  if(!w)return er('اكتب سبب التعديل.');
  if(!auto){if($('#lmin').value===''||!(m>=0))return er('دقائق التأخير يجب أن تكون صفرًا أو أكثر.');if(a!==''&&!(+a>=0))return er('قيمة الخصم لا يمكن أن تكون سالبة.')}
@@ -349,7 +364,7 @@ function saveLate(id,auto){
  else{D.lt[k]={m,a:a===''?null:+a,w};lg('تعديل تأخير',e.name+' '+M(),r.late+' د / '+fm(r.dLate),m+' د / '+(a===''?'تلقائي':fm(+a)),w)}
  save();dlg.close();R();msg('تم التعديل. اضغط «تنفيذ خصومات التأخير» لتحديث الخصم النقدي.');
 }
-async function runLate(){
+async function runLate(){if(gl(M()))return;
  if(!await ask('تنفيذ خصومات التأخير لشهر '+M()+'؟ سيُستبدل أي خصم تأخير منفّذ سابقًا لنفس الشهر، فلا يتكرر.'))return;
  const m=M(),t=ymd(new Date()),y=+m.slice(0,4),mo=+m.slice(5),dt=t.startsWith(m)?t:m+'-'+pad(new Date(y,mo,0).getDate());let c=0;
  act().forEach(e=>{
@@ -373,7 +388,55 @@ function issues(m){
  return L.sort((a,b)=>a.date.localeCompare(b.date));
 }
 function jump(k){tab='att';R();editA(k)}
-function fix(k,a){const r=D.att[k];if(a!=='ok')r.st=a;r.rv=1;save();R()}
+function fix(k,a){if(gl(k.split('|')[1]))return;const r=D.att[k];if(a!=='ok')r.st=a;r.rv=1;save();R()}
+const wdn=['أحد','اثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'],dfmt=d=>+d.slice(8)+' '+wdn[new Date(d+'T00:00:00').getDay()],hf=h=>{const t=Math.round(h*60);return Math.floor(t/60)+':'+pad(t%60)},enOf=e=>tm(e.end)+(tm(e.end)<=tm(e.start)?1440:0);
+document.addEventListener('change',e=>{const b=e.target.closest('[data-c]');if(b&&typeof window[b.dataset.c]==='function')window[b.dataset.c](b.dataset.p,b.value)});
+function setEl(k,v){if(gl(k.split('|')[1]))return;const r=D.att[k];if(!r)return;const o=r.el||'';if(v)r.el=v;else delete r.el;lg('معاملة انصراف مبكر',k.replace('|',' / '),o||'افتراضي',v||'افتراضي');save();R();msg('تم تغيير معاملة الانصراف المبكر.')}
+let ce='';
+const CC={present:'#2e7d5b66',early:'#e5732677',absent:'#b3261e77',half:'#d4a01777',leave:'#3b7ddd66',unpaid:'#8a5cd466',off:'#77777755'},CT={present:'حاضر',early:'انصراف مبكر',absent:'غياب',half:'نصف يوم',leave:'إجازة مدفوعة',unpaid:'بدون أجر',off:'إجازة أسبوعية/عطلة'};
+const shf=(e,r)=>{const a=tm(r&&r.ss||e.start),b=tm(r&&r.se||e.end);return[a,b<=a?b+1440:b]};
+const gl=d=>{if(D.lock[String(d).slice(0,7)]){msg('هذا الشهر مقفل. افتحه من صفحة المرتبات إن أردت التعديل.',1);return true}return false};
+const pc=(id,r)=>{const p=D.pay[M()+'|'+id];return p?`<span style="color:var(--ok)">✓ ${p.d.slice(5)} (${fm(p.a)})</span>${Math.abs(p.a-r.net)>.5?' <b class="neg">⚠ تغيّر الصافي</b>':''} <button data-a="payE" data-p="${esc(id)}">إلغاء</button>`:`<button data-a="payE" data-p="${esc(id)}">صرف</button>`};
+function dayInfo(e,dt){
+ const r=D.att[e.id+'|'+dt],wd=new Date(dt+'T00:00:00').getDay(),h=D.hol.find(x=>x.d===dt),t=ymd(new Date());
+ if((e.hd&&dt<e.hd)||dt>t)return['',''];
+ if(r&&r.st&&r.st!=='present')return[r.st,ST[r.st]];
+ if(r&&(r.in||r.out)){const em=r.out?Math.max(0,shf(e,r)[1]-(tm(r.out)+(r.nx?1440:0))):0;return[em>D.set.earlyThr?'early':'present',(r.in||'؟')+'–'+(r.out||'؟')]}
+ if(wd===D.set.off||h)return['off',h?h.n:'إجازة'];
+ return dt<t?['absent','غياب']:['',''];
+}
+function calDay(k){const q=k.split('|'),r=D.att[k];tab='att';R();$('#aemp').value=q[0];$('#adt').value=q[1];$('#ain').value=r&&r.in||'';$('#aout').value=r&&r.out||'';$('#ast').value=r?r.st:'present';scrollTo(0,0);msg('عدّل البيانات ثم اضغط «حفظ».')}
+function todayBox(){
+ const t=ymd(new Date()),wd=new Date().getDay(),h=D.hol.find(x=>x.d===t),nm=new Date().getHours()*60+new Date().getMinutes();
+ const rows=act().map(e=>{const r=D.att[e.id+'|'+t],sh=shf(e,r);let s,c='';
+  if(r&&r.st&&r.st!=='present')s=ST[r.st];
+  else if(r&&r.in){const l=tm(r.in)-sh[0];s=l>D.set.grace?'متأخر '+l+' د':'حاضر';if(l>D.set.grace)c='neg';if(r.out)s+=' — انصرف '+r.out}
+  else if(r&&r.out)s='انصراف بدون حضور';
+  else if(wd===D.set.off||h)s=h?esc(h.n):'إجازة أسبوعية';
+  else{s=nm>sh[0]+D.set.grace?'لم يحضر':'لم يحضر بعد';c='neg'}
+  return `<tr><td>${esc(e.name)}</td><td class="${c}">${s}</td><td>${r&&r.in||'-'}</td></tr>`});
+ return `<div class="box"><h3>اليوم — ${t}</h3><div class="tw"><table><tr><th>الموظف</th><th>الحالة</th><th>الحضور</th></tr>${rows.join('')||'<tr><td class="hint">لا يوجد موظفون</td></tr>'}</table></div></div>`;
+}
+async function lockM(){const m=M(),on=D.lock[m];if(!await ask(on?'فتح شهر '+m+' للتعديل؟':'إقفال شهر '+m+'؟ لن يمكن تعديل الحضور أو الخصومات أو السلف لهذا الشهر إلا بعد فتحه.'))return;if(on)delete D.lock[m];else D.lock[m]={d:new Date().toISOString()};lg(on?'فتح شهر':'إقفال شهر',m);save();R();msg(on?'تم فتح الشهر.':'تم إقفال الشهر.')}
+async function payE(id){const m=M(),k=m+'|'+id,e=E(id),r=calc(e,m);if(D.pay[k]){if(!await ask('إلغاء تسجيل الصرف لـ '+esc(e.name)+'؟'))return;lg('إلغاء صرف',e.name+' '+m,D.pay[k].a);delete D.pay[k]}else{D.pay[k]={d:ymd(new Date()),a:r.net};lg('تسجيل صرف',e.name+' '+m,null,r.net)}save();R();msg('تم التحديث.')}
+function addI(){const id=$('#iemp').value,t=+$('#itot').value,p=+$('#iper').value,st=$('#ist').value;if(!id)return msg('اختر الموظف.',1);if(!(t>0)||!(p>0))return msg('الإجمالي والقسط يجب أن يكونا أكبر من صفر.',1);if(p>t)return msg('القسط أكبر من إجمالي السلفة.',1);if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(st))return msg('شهر البداية غير صالح.',1);D.inst.push({emp:id,tot:t,per:p,s:st});lg('تقسيط سلفة',id+' من '+st,null,t+' / '+p);save();R();msg('تمت إضافة التقسيط.')}
+async function delI(i){const p=D.inst[+i];if(!p||!await ask('حذف خطة التقسيط؟ ستتوقف الأقساط القادمة ولن يتأثر شيء مسجّل كصرف.'))return;lg('حذف تقسيط',p.emp,p.tot);D.inst.splice(+i,1);save();R();msg('تم الحذف.')}
+function addS(){const n=$('#shn').value.trim(),a=$('#shs').value,b=$('#she').value;if(!n||!vt(a)||!vt(b)||a===b)return msg('اكتب اسم الوردية وبداية ونهاية صالحتين ومختلفتين.',1);D.sh.push({n,s:a,e:b});save();R();msg('تمت إضافة الوردية.')}
+async function delS(i){if(!await ask('حذف الوردية؟ السجلات التي استخدمتها تحتفظ بأوقاتها.'))return;D.sh.splice(+i,1);save();R();msg('تم الحذف.')}
+function setT(el){const v=el.value.trim(),a=v.split(',').map(x=>x.split(':').map(Number));if(!v||a.some(x=>x.length!=2||x.some(isNaN)||x[0]<=0||x[1]<0||x[1]>1)){el.value=D.set.tiers;return msg('صيغة الشرائح غير صالحة. مثال: 15:0,30:0.25,9999:0.5 (دقائق:جزء من اليوم بين 0 و1).',1)}D.set.tiers=v;save();msg('تم حفظ الشرائح.')}
+async function bulk(){
+ const a=$('#bfr').value,b=$('#bto').value,st=$('#bst').value,sel=[...$('#bemp').selectedOptions].map(o=>o.value),sk=$('#bsk').checked;
+ if(!vd(a)||!vd(b)||a>b)return msg('اختر تاريخ بداية ونهاية صالحين (البداية قبل النهاية).',1);
+ if(!sel.length)return msg('اختر موظفًا واحدًا على الأقل.',1);
+ const ids=sel.includes('*')?act().map(e=>e.id):sel,days=[];
+ for(let d=new Date(a+'T00:00:00');ymd(d)<=b&&days.length<63;d.setDate(d.getDate()+1))days.push(ymd(d));
+ if(days.length>62)return msg('الحد الأقصى 62 يومًا في المرة الواحدة.',1);
+ const ks=[];ids.forEach(id=>days.forEach(dt=>{if(D.lock[dt.slice(0,7)])return;if(sk&&(new Date(dt+'T00:00:00').getDay()===D.set.off||D.hol.some(h=>h.d===dt)))return;ks.push(id+'|'+dt)}));
+ if(!ks.length)return msg('لا توجد أيام قابلة للتسجيل (الأيام المقفلة والإجازات المتخطاة لا تُسجَّل).',1);
+ const ex=ks.filter(k=>D.att[k]).length;
+ if(!await ask(`تسجيل <b>${ST[st]}</b> لعدد ${ks.length} يوم/موظف.${ex?`<br><b class="neg">سيُستبدل ${ex} سجل حضور موجود.</b>`:''}`))return;
+ ks.forEach(k=>D.att[k]={in:'',out:'',st});lg('تسجيل جماعي',a+' → '+b,null,ks.length+' سجل ('+ST[st]+')');save();R();msg('تم تسجيل '+ks.length+' سجل.');
+}
 async function rest(){try{const j=JSON.parse($('#bk').value),d=j.data||j;if(!Array.isArray(d.emp))throw 0;const o=migrate(Object.assign({emp:[],att:{},adj:[]},d));if(!await ask('استبدال كل البيانات الحالية بالنص المُلصق ('+o.emp.length+' موظف)؟'))return;D=o;save();R();msg('تمت الاستعادة.')}catch(e){msg('النص غير صالح.',1)}}
 async function rfile(f){
  if(!f)return;
@@ -390,7 +453,7 @@ function dl(){
 function addH(){const d=$('#hdt').value,n=$('#hnm').value.trim();if(!vd(d)||!n)return msg('اكتب تاريخًا صالحًا واسم العطلة.',1);if(D.hol.some(h=>h.d===d))return msg('هذا التاريخ مسجّل كعطلة بالفعل.',1);D.hol.push({d,n});save();R();msg('تمت إضافة العطلة.')}
 async function delH(d){if(!await ask('حذف العطلة بتاريخ '+esc(d)+'؟'))return;D.hol=D.hol.filter(h=>h.d!==d);save();R();msg('تم الحذف.')}
 function setS(k,el){
- const L={grace:[0,600],otMult:[0,10],otMin:[0,600],lateMult:[0,10],div:[1,31]};let v;
+ const L={freeLate:[0,31],earlyThr:[0,600],grace:[0,600],otMult:[0,10],otMin:[0,600],lateMult:[0,10],div:[1,31]};let v;
  if(el.type==='time'){v=el.value;const o=k==='dStart'?D.set.dEnd:D.set.dStart;if(!vt(v)||v===o){el.value=D.set[k];return msg('وقت غير صالح (البداية والنهاية يجب أن تختلفا).',1)}}
  else{v=+el.value;const r=L[k];if(el.value===''||isNaN(v)||v<r[0]||v>r[1]){el.value=D.set[k];return msg('قيمة غير صالحة: يجب أن تكون بين '+r[0]+' و'+r[1]+'.',1)}}
  D.set[k]=v;save();msg('تم حفظ الإعداد.');
@@ -404,7 +467,7 @@ function stage(NE,NA,pdf){
  dlg.showModal();
 }
 function applyStg(ow){
- const g=STG;if(!g)return;g.NE.forEach(e=>D.emp.push(e));const set=ow==='1'?g.nw.concat(g.cf):g.nw;set.forEach(k=>D.att[k]=g.NA[k]);
+ const g=STG;if(!g)return;g.NE.forEach(e=>D.emp.push(e));const set=(ow==='1'?g.nw.concat(g.cf):g.nw).filter(k=>!D.lock[k.split('|')[1].slice(0,7)]);set.forEach(k=>D.att[k]=g.NA[k]);
  lg('استيراد حضور','ملف',null,set.length+' سجل',ow==='1'?'مع استبدال '+g.cf.length+' متعارض':'');STG=null;save();dlg.close();R();
  msg(`تم الاستيراد: ${g.NE.length} موظف جديد و${g.nw.length} سجل جديد`+(ow==='1'?`، واستُبدل ${g.cf.length} متعارض`:g.cf.length?`، وتُرك ${g.cf.length} متعارض دون تغيير`:'')+'. رواتب الموظفين الجدد = 0، راجعها.');
 }
