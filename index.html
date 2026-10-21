@@ -112,11 +112,13 @@ tbody tr:nth-child(even) td{background-color:rgba(255,255,255,.012)}
 }
 @media(max-width:420px){.view-head{align-items:flex-start}.view-head p{max-width:245px}.view-month{padding:5px 8px}.cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.card{min-height:100px;padding:13px}.card b{font-size:22px}}
 @media print{#msg{display:none!important}.view-head{border:0}.tw{overflow:visible;border:0}th{position:static}}
+#pall{display:none}.sl table{max-width:520px}
+@media print{.pa header,.pa nav,.pa main,.pa #msg{display:none}.pa #pall{display:block}.sl{page-break-after:always;margin:10px auto;max-width:520px}.sl:last-child{page-break-after:auto}}
 </style>
 </head>
 <body>
 <header><div class="brand"><div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M24 4 40 10v12c0 10-6.8 17.7-16 22C14.8 39.7 8 32 8 22V10L24 4Z" stroke="currentColor" stroke-width="2"/><path d="m17 17 7-5 7 5-2 12-5 5-5-5-2-12Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m17 17-5-3 2 9 4 2m13-8 5-3-2 9-4 2M20 23h.1M28 23h.1M21 28l3 2 3-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="brand-copy"><b>Lion Auto</b><small>إدارة الحضور والانصراف والمرتبات</small></div></div><div class="header-spacer"></div><label class="month-field"><span>الفترة الشهرية</span><input type="month" id="mon" aria-label="الشهر"></label></header>
-<nav id="nav"></nav><div id="msg"></div><main id="app"></main><dialog id="dlg"></dialog><dialog id="cf"></dialog>
+<nav id="nav"></nav><div id="msg"></div><main id="app"></main><dialog id="dlg"></dialog><dialog id="cf"></dialog><div id="pall"></div>
 <script>
 const $=s=>document.querySelector(s),K='lionauto_v1',pad=n=>String(n).padStart(2,'0');
 let D={emp:[],att:{},adj:[],set:{grace:10,otMult:0,otMin:30,lateMult:1,absMult:1,earlyMode:'half',earlyThr:30,tierOn:0,tiers:'15:0,30:0.25,9999:0.5',freeLate:0,round:0,div:30,off:5,ins:0,dStart:'09:00',dEnd:'17:00'}};
@@ -176,7 +178,7 @@ const V={
 home(){
  const m=M(),rows=act().map(e=>calc(e,m)),t=ymd(new Date()),s=k=>rows.reduce((a,r)=>a+r[k],0);
  const pr=act().filter(e=>D.att[e.id+'|'+t]&&D.att[e.id+'|'+t].in).length;
- return `<div class="cards">${[['الموظفون',act().length],['حضور اليوم',pr],['أيام الغياب هذا الشهر',s('abs')],['إجمالي الخصومات',fm(s('ded'))],['المكافآت والإضافي',fm(s('add'))],['بصمات ناقصة',issues(m).length],['صافي المرتبات',fm(s('net'))]].map(a=>`<div class="card"><small>${a[0]}</small><b>${a[1]}</b></div>`).join('')}</div>`+todayBox()
+ return `${bkWarn()}<div class="cards">${[['الموظفون',act().length],['حضور اليوم',pr],['أيام الغياب هذا الشهر',s('abs')],['إجمالي الخصومات',fm(s('ded'))],['المكافآت والإضافي',fm(s('add'))],['بصمات ناقصة',issues(m).length],['صافي المرتبات',fm(s('net'))]].map(a=>`<div class="card"><small>${a[0]}</small><b>${a[1]}</b></div>`).join('')}</div>`+todayBox()
  +(D.emp.length?'':'<p class="hint">ابدأ بإضافة الموظفين من تبويب «الموظفون»، أو استورد ملف ZKTeco مباشرة.</p>');
 },
 emp(){
@@ -213,7 +215,7 @@ adj(){
 pay(){
  const m=M(),R_=act().map(e=>[e,calc(e,m)]),s=k=>R_.reduce((a,r)=>a+r[1][k],0),bs=act().reduce((a,e)=>a+e.salary,0),paid=R_.reduce((q,a)=>{const p=D.pay[m+'|'+a[0].id];return q+(p?p.a:0)},0);
  const h=['الاسم','الوظيفة','المرتب الأساسي','سلف','تأمينات','يومية','الحضور الفعلي','الحضور','غياب','إجازة بدون أجر','التأخير (د)','خصم التأخير','نقدية خصومات','نقدية مكافآت','صافي المرتب','الصرف'];
- return `${issues(m).length?`<p class="np" style="color:var(--bad)">⚠ يوجد ${issues(m).length} بصمة ناقصة في هذا الشهر قد تؤثر على الحساب. <button class="p" onclick="tab='chk';R()">مراجعتها</button></p>`:''}<p class="hint">المصروف: ${fm(paid)} من ${fm(s('net'))} — المتبقي: ${fm(s('net')-paid)} ${D.lock[m]?'| 🔒 الشهر مقفل':''}</p><p class="np"><button class="p" data-a="lockM">${D.lock[m]?'فتح الشهر':'إقفال الشهر'}</button> <button class="p" onclick="runLate()">تنفيذ خصومات التأخير</button> <button class="p" onclick="print()">طباعة كشف المرتبات</button></p><div class="tw"><table><tr>${h.map(x=>`<th>${x}</th>`).join('')}<th class="np"></th></tr>${R_.map(a=>{const e=a[0],r=a[1];return `<tr><td>${esc(e.name)}</td><td>${esc(e.title)}</td><td>${fm(e.salary)}</td><td>${fm(r.adv)}</td><td>${r.ins?fm(r.ins):'-'}</td><td>${fm(r.daily)}</td><td>${r.pres}</td><td>${r.tot}</td><td class="${r.abs?'neg':''}">${r.abs}</td><td>${r.ul}</td><td class="${r.late?'neg':''}">${r.late}${r.lateOv?' ✎':''}</td><td>${r.lateDone?'<span style="color:var(--ok)">✓ '+fm(r.lateDone)+'</span>':fm(r.dLate)}</td><td>${fm(r.manD)}</td><td>${fm(r.bonT)}</td><td><b>${fm(r.net)}</b></td><td>${pc(e.id,r)}</td><td class="np"><button data-a="editLate" data-p="${esc(e.id)}">تعديل</button><button data-a="slip" data-p="${esc(e.id)}">قسيمة</button></td></tr>`}).join('')}<tfoot><tr><td>الإجمالي</td><td></td><td>${fm(bs)}</td><td>${fm(s('adv'))}</td><td>${fm(s('ins'))}</td><td></td><td>${s('pres')}</td><td>${s('tot')}</td><td>${s('abs')}</td><td>${s('ul')}</td><td>${s('late')}</td><td>${fm(s('dLate'))}</td><td>${fm(s('manD'))}</td><td>${fm(s('bonT'))}</td><td>${fm(s('net'))}</td><td></td><td class="np"></td></tr></tfoot></table></div>
+ return `${issues(m).length?`<p class="np" style="color:var(--bad)">⚠ يوجد ${issues(m).length} بصمة ناقصة في هذا الشهر قد تؤثر على الحساب. <button class="p" onclick="tab='chk';R()">مراجعتها</button></p>`:''}<p class="hint">المصروف: ${fm(paid)} من ${fm(s('net'))} — المتبقي: ${fm(s('net')-paid)} ${D.lock[m]?'| 🔒 الشهر مقفل':''}</p><p class="np"><button class="p" data-a="lockM">${D.lock[m]?'فتح الشهر':'إقفال الشهر'}</button> <button class="p" onclick="runLate()">تنفيذ خصومات التأخير</button> <button class="p" onclick="print()">طباعة كشف المرتبات</button> <button class="p" onclick="slipsAll()">طباعة كل القسائم</button> <button class="p" onclick="exportX()">تصدير Excel</button></p><div class="tw"><table><tr>${h.map(x=>`<th>${x}</th>`).join('')}<th class="np"></th></tr>${R_.map(a=>{const e=a[0],r=a[1];return `<tr><td>${esc(e.name)}</td><td>${esc(e.title)}</td><td>${fm(e.salary)}</td><td>${fm(r.adv)}</td><td>${r.ins?fm(r.ins):'-'}</td><td>${fm(r.daily)}</td><td>${r.pres}</td><td>${r.tot}</td><td class="${r.abs?'neg':''}">${r.abs}</td><td>${r.ul}</td><td class="${r.late?'neg':''}">${r.late}${r.lateOv?' ✎':''}</td><td>${r.lateDone?'<span style="color:var(--ok)">✓ '+fm(r.lateDone)+'</span>':fm(r.dLate)}</td><td>${fm(r.manD)}</td><td>${fm(r.bonT)}</td><td><b>${fm(r.net)}</b></td><td>${pc(e.id,r)}</td><td class="np"><button data-a="editLate" data-p="${esc(e.id)}">تعديل</button><button data-a="slip" data-p="${esc(e.id)}">قسيمة</button></td></tr>`}).join('')}<tfoot><tr><td>الإجمالي</td><td></td><td>${fm(bs)}</td><td>${fm(s('adv'))}</td><td>${fm(s('ins'))}</td><td></td><td>${s('pres')}</td><td>${s('tot')}</td><td>${s('abs')}</td><td>${s('ul')}</td><td>${s('late')}</td><td>${fm(s('dLate'))}</td><td>${fm(s('manD'))}</td><td>${fm(s('bonT'))}</td><td>${fm(s('net'))}</td><td></td><td class="np"></td></tr></tfoot></table></div>
  <p class="hint">الصافي = أيام الحضور المحتسبة × اليومية − السلف − نقدية الخصومات + نقدية المكافآت. الإجازة الأسبوعية تُحتسب مدفوعة تلقائيًا، وأي إجازة أخرى تُسجَّل من تبويب الحضور بحالة «إجازة مدفوعة». الحساب حتى تاريخ اليوم في الشهر الحالي. التأخير = تأخر الحضور + الانصراف المبكر. «نقدية خصومات» هي الخصومات اليدوية فقط، وخصم التأخير المنفّذ يظهر في عموده المستقل (والصافي يشملهما). الإجازة غير المدفوعة والغياب لا يُحتسبان ضمن الأيام المدفوعة، والعطلات الرسمية تُحتسب مدفوعة. زر «تنفيذ خصومات التأخير» يحوّله إلى خصم نقدي (ويمكن إعادة تنفيذه بعد أي تعديل)، وزر «تعديل» يغيّر دقائق التأخير أو قيمة الخصم للموظف.</p>`;
 },
 set(){
@@ -340,11 +342,11 @@ function zkRep(tk){
  });
  const NE=[],NA={};const ids=Object.keys(N);Object.keys(PU).forEach(i=>ids.includes(i)||ids.push(i));
  ids.forEach(id=>{
-  const a=(PU[id]||[]).sort((x,y)=>x.t-y.t),sh=[];let cu=null;
+  const a=(PU[id]||[]).sort((x,y)=>x.t-y.t),sh=[],orph=[];let cu=null;
   a.forEach(u=>{
    if(u.ty=='in'){if(cu&&u.t-cu.i<960){cu.p.push(u);return}if(cu)sh.push(cu);cu={i:u.t,p:[]}}
    else if(cu&&u.t-cu.i<960)cu.p.push(u);
-   else{if(cu){sh.push(cu);cu=null}if(u.t%1440>=720)sh.push({o:u.t})}
+   else{if(cu){sh.push(cu);cu=null}if(u.t%1440>=720)sh.push({o:u.t});else orph.push(u.t)}
   });
   if(cu)sh.push(cu);
   /* بصمة انصراف ثم حضور بفارق 10 دقائق فأكثر داخل نفس الوردية = استراحة غداء، وآخر انصراف هو انصراف الوردية */
@@ -356,6 +358,7 @@ function zkRep(tk){
    NE.push({id,name:N[id]||'موظف '+id,dept:'',title:'',salary:0,start:si==null?D.set.dStart:fh(si),end:so==null?D.set.dEnd:fh(so),hd:sh.length?iso(sh[0].i||sh[0].o):''});
   }
   sh.forEach(x=>{NA[id+'|'+iso(x.i||x.o)]={in:x.i?hm(x.i):'',out:x.o?hm(x.o):'',nx:x.i&&x.o&&dy(x.o)>dy(x.i)?1:0,st:'present',...(x.lo!=null?{lo:hm(x.lo),li:hm(x.li)}:{})}});
+  orph.forEach(t=>{const pk=id+'|'+iso(t-1440),o=D.att[pk];if(o&&o.in&&!o.out&&!NA[pk]&&((t%1440)-tm(o.in)+1440)%1440<=960)NA[pk]={in:o.in,out:hm(t),nx:1,st:'present'}});
  }); stage(NE,NA,1);
 }
 function editLate(id){
@@ -449,6 +452,21 @@ async function bulk(){
  if(!await ask(`تسجيل <b>${ST[st]}</b> لعدد ${ks.length} يوم/موظف.${ex?`<br><b class="neg">سيُستبدل ${ex} سجل حضور موجود.</b>`:''}`))return;
  ks.forEach(k=>D.att[k]={in:'',out:'',st});lg('تسجيل جماعي',a+' → '+b,null,ks.length+' سجل ('+ST[st]+')');save();R();msg('تم تسجيل '+ks.length+' سجل.');
 }
+const bkWarn=()=>act().length&&(!D.meta.lastBackup||Date.now()-new Date(D.meta.lastBackup)>7*864e5)?`<p class="np" style="color:var(--bad)">⚠ ${D.meta.lastBackup?'مرّ أكثر من أسبوع على آخر نسخة احتياطية.':'لم تنزّل نسخة احتياطية من هذا المتصفح بعد.'} <button class="p" onclick="dl()">تنزيل نسخة الآن</button></p>`:'';
+const slipRows=(e,r)=>[['الراتب الأساسي',e.salary],['اليومية',r.daily],['أيام محتسبة ('+r.tot+' يوم، غياب '+r.abs+(r.ul?'، إجازة بدون أجر '+r.ul:'')+')',r.days*r.daily],['مكافآت وإضافي',r.bonT],['خصم يدوي',-r.manD],['خصم تأخير منفّذ',-r.lateDone],['سلف',-r.adv],['تأمينات',-r.insD],...(r.net!==r.rawNet?[['تقريب',r.net-r.rawNet]]:[])];
+function slipsAll(){
+ const m=M();if(!act().length)return msg('لا يوجد موظفون.',1);
+ $('#pall').innerHTML=act().map(e=>{const r=calc(e,m);return `<div class="sl"><h3>🦁 Lion Auto — قسيمة مرتب ${m}</h3><p>${esc(e.name)} — كود ${esc(e.id)} — ${esc(e.title)}</p><table>${slipRows(e,r).map(a=>`<tr><td>${a[0]}</td><td>${fm(a[1])}</td></tr>`).join('')}<tr><th>الصافي</th><th>${fm(r.net)}</th></tr></table><p style="margin-top:28px">توقيع الاستلام: ______________________ &nbsp; التاريخ: ____________</p></div>`}).join('');
+ document.body.classList.add('pa');print();document.body.classList.remove('pa');
+}
+function exportX(){
+ try{const m=M(),h=['الاسم','الوظيفة','المرتب الأساسي','سلف','تأمينات','يومية','الحضور الفعلي','الحضور','غياب','إجازة بدون أجر','التأخير (د)','خصم التأخير','نقدية خصومات','نقدية مكافآت','صافي المرتب','الصرف'];
+  const rows=act().map(e=>{const r=calc(e,m),p=D.pay[m+'|'+e.id];return[e.name,e.title||'',e.salary,r.adv,r.ins,r.daily,r.pres,r.tot,r.abs,r.ul,r.late,r.lateDone||r.dLate,r.manD,r.bonT,r.net,p?p.d:'']}),sm=i=>rows.reduce((a,r)=>a+r[i],0);
+  const ws=XLSX.utils.aoa_to_sheet([h,...rows,['الإجمالي','',sm(2),sm(3),sm(4),'',sm(6),sm(7),sm(8),sm(9),sm(10),sm(11),sm(12),sm(13),sm(14),'']]),wb=XLSX.utils.book_new();
+  ws['!cols']=h.map(()=>({wch:16}));XLSX.utils.book_append_sheet(wb,ws,'المرتبات '+m);wb.Workbook={Views:[{RTL:true}]};
+  XLSX.writeFile(wb,'lion-auto-payroll-'+m+'.xlsx');msg('تم إنشاء ملف Excel.');
+ }catch(e){msg('تعذر إنشاء ملف Excel. تأكد من الاتصال بالإنترنت وجرّب من نسخة GitHub أو من جهازك (التنزيل لا يعمل داخل بعض المعاينات).',1)}
+}
 async function rest(){try{const j=JSON.parse($('#bk').value),d=j.data||j;if(!Array.isArray(d.emp))throw 0;const o=migrate(Object.assign({emp:[],att:{},adj:[]},d));if(!await ask('استبدال كل البيانات الحالية بالنص المُلصق ('+o.emp.length+' موظف)؟'))return;D=o;save();R();msg('تمت الاستعادة.')}catch(e){msg('النص غير صالح.',1)}}
 async function rfile(f){
  if(!f)return;
@@ -472,14 +490,14 @@ function setS(k,el){
 }
 function stage(NE,NA,pdf){
  const ks=Object.keys(NA),nw=[],cf=[],ad=[];let same=0;
- ks.forEach(k=>{const o=D.att[k],n=NA[k];if(!o)nw.push(k);else if(o.in===n.in&&o.out===n.out){same++;if(n.lo&&!o.lo)ad.push(k)}else cf.push(k)});
+ ks.forEach(k=>{const o=D.att[k],n=NA[k];if(!o)nw.push(k);else if(o.in===n.in&&o.out===n.out){same++;if(n.lo&&!o.lo)ad.push(k)}else if(o.in===n.in&&!o.out&&n.out)ad.push(k);else cf.push(k)});
  if(!NE.length&&!ks.length)return msg('لم يتم العثور على موظفين أو سجلات حضور في الملف.',1);
  STG={NE,NA,nw,cf,ad};
- $('#dlg').innerHTML=`<h3>معاينة الاستيراد</h3><p>موظفون جدد: <b>${NE.length}</b><br>سجلات حضور جديدة: <b>${nw.length}</b><br>مطابقة لسجلات موجودة (تُتجاهل): ${same}<br>سجلات مطابقة سيُضاف لها وقت الغداء: <b>${ad.length}</b><br>متعارضة مع سجلات موجودة: <b class="neg">${cf.length}</b></p>${pdf?'<p class="hint">⚠ أوقات تقرير PDF بنظام 12 ساعة بدون صباحًا/مساءً، وتم استنتاج الفترة من ترتيب البصمات، ومواعيد الدوام وتاريخ التعيين مقدّرة. راجع النتيجة بعد الاستيراد (تبويب «بصمات ناقصة»).</p>':''}${cf.length?`<div class="tw" style="max-height:200px;overflow:auto"><table><tr><th>الموظف / التاريخ</th><th>الحالي</th><th>الجديد</th></tr>${cf.slice(0,30).map(k=>{const o=D.att[k],n=NA[k];return `<tr><td>${esc(k.replace('|',' / '))}</td><td>${o.in||'-'} ← ${o.out||'-'}</td><td>${n.in||'-'} ← ${n.out||'-'}</td></tr>`}).join('')}</table></div>${cf.length>30?'<p class="hint">يظهر أول 30 تعارضًا فقط.</p>':''}`:''}<p class="np"><button class="p" data-a="applyStg" data-p="0">استيراد الجديد فقط</button>${cf.length?' <button class="p" style="background:var(--bad);color:#fff" data-a="applyStg" data-p="1">استيراد واستبدال المتعارض</button>':''} <button class="p" onclick="dlg.close()">إلغاء</button></p>`;
+ $('#dlg').innerHTML=`<h3>معاينة الاستيراد</h3><p>موظفون جدد: <b>${NE.length}</b><br>سجلات حضور جديدة: <b>${nw.length}</b><br>مطابقة لسجلات موجودة (تُتجاهل): ${same}<br>سجلات سيُستكمل ناقصها دون استبدال (انصراف أو غداء): <b>${ad.length}</b><br>متعارضة مع سجلات موجودة: <b class="neg">${cf.length}</b></p>${pdf?'<p class="hint">⚠ أوقات تقرير PDF بنظام 12 ساعة بدون صباحًا/مساءً، وتم استنتاج الفترة من ترتيب البصمات، ومواعيد الدوام وتاريخ التعيين مقدّرة. راجع النتيجة بعد الاستيراد (تبويب «بصمات ناقصة»).</p>':''}${cf.length?`<div class="tw" style="max-height:200px;overflow:auto"><table><tr><th>الموظف / التاريخ</th><th>الحالي</th><th>الجديد</th></tr>${cf.slice(0,30).map(k=>{const o=D.att[k],n=NA[k];return `<tr><td>${esc(k.replace('|',' / '))}</td><td>${o.in||'-'} ← ${o.out||'-'}</td><td>${n.in||'-'} ← ${n.out||'-'}</td></tr>`}).join('')}</table></div>${cf.length>30?'<p class="hint">يظهر أول 30 تعارضًا فقط.</p>':''}`:''}<p class="np"><button class="p" data-a="applyStg" data-p="0">استيراد الجديد فقط</button>${cf.length?' <button class="p" style="background:var(--bad);color:#fff" data-a="applyStg" data-p="1">استيراد واستبدال المتعارض</button>':''} <button class="p" onclick="dlg.close()">إلغاء</button></p>`;
  dlg.showModal();
 }
 function applyStg(ow){
- const g=STG;if(!g)return;g.NE.forEach(e=>D.emp.push(e));const set=(ow==='1'?g.nw.concat(g.cf):g.nw).filter(k=>!D.lock[k.split('|')[1].slice(0,7)]);set.forEach(k=>D.att[k]=g.NA[k]);g.ad.forEach(k=>{if(!D.lock[k.split('|')[1].slice(0,7)]&&D.att[k]&&!D.att[k].lo){D.att[k].lo=g.NA[k].lo;D.att[k].li=g.NA[k].li}});
+ const g=STG;if(!g)return;g.NE.forEach(e=>D.emp.push(e));const set=(ow==='1'?g.nw.concat(g.cf):g.nw).filter(k=>!D.lock[k.split('|')[1].slice(0,7)]);set.forEach(k=>D.att[k]=g.NA[k]);g.ad.forEach(k=>{const o=D.att[k],n=g.NA[k];if(D.lock[k.split('|')[1].slice(0,7)]||!o)return;if(!o.out&&n.out){o.out=n.out;o.nx=n.nx}if(n.lo&&!o.lo){o.lo=n.lo;o.li=n.li}});
  lg('استيراد حضور','ملف',null,set.length+' سجل',ow==='1'?'مع استبدال '+g.cf.length+' متعارض':'');STG=null;save();dlg.close();R();
  msg(`تم الاستيراد: ${g.NE.length} موظف جديد و${g.nw.length} سجل جديد`+(ow==='1'?`، واستُبدل ${g.cf.length} متعارض`:g.cf.length?`، وتُرك ${g.cf.length} متعارض دون تغيير`:'')+'. رواتب الموظفين الجدد = 0، راجعها.');
 }
