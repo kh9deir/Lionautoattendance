@@ -204,7 +204,7 @@ cal(){
 },
 chk(){
  const L=issues(M());
- return `<p class="hint">أيام فيها حضور بدون انصراف، أو انصراف بدون حضور، أو مدة عمل أقل من ساعتين (شهر ${M()}). راجعها قبل المرتبات: «تعديل» لتصحيح الأوقات، «نصف يوم» أو «غياب» لتغيير الحالة، «سليم» لو البصمة صحيحة وتخفيها من القائمة.</p><div class="tw"><table><tr><th>التاريخ</th><th>الموظف</th><th>حضور</th><th>انصراف</th><th>المشكلة</th><th>إجراء</th></tr>${L.map(x=>{const e=E(x.id),k=x.k;return `<tr><td>${x.date}</td><td>${esc(e?e.name:x.id)}</td><td>${x.r.in||'-'}</td><td>${x.r.out||'-'}${x.r.nx?' (+1)':''}</td><td class="neg">${x.p}</td><td><button data-a="jump" data-p="${esc(k)}">تعديل</button><button data-a="fix" data-p="${esc(k)}" data-q="half">نصف يوم</button><button data-a="fix" data-p="${esc(k)}" data-q="absent">غياب</button><button data-a="fix" data-p="${esc(k)}" data-q="ok">سليم</button></td></tr>`}).join('')||'<tr><td colspan="6" class="hint">✓ لا توجد بصمات ناقصة في هذا الشهر</td></tr>'}</table></div>`;
+ return `<p class="hint">أيام فيها حضور بدون انصراف، أو انصراف بدون حضور، أو مدة عمل أقل من ساعتين (شهر ${M()}). راجعها قبل المرتبات: «تعديل» لتصحيح الأوقات، «نصف يوم» أو «غياب» لتغيير الحالة، «سليم» لو البصمة صحيحة وتخفيها من القائمة.</p>${L.some(x=>can12(x.r))?'<p class="np"><button class="p" data-a="fix12all">تصحيح كل الانصرافات القصيرة (+12 ساعة)</button> <span class="hint">لتقارير 12 ساعة: انصراف الساعة 07:13 بعد حضور 07:07 غالبًا يعني 07:13 مساءً.</span></p>':''}<div class="tw"><table><tr><th>التاريخ</th><th>الموظف</th><th>حضور</th><th>انصراف</th><th>المشكلة</th><th>إجراء</th></tr>${L.map(x=>{const e=E(x.id),k=x.k;return `<tr><td>${x.date}</td><td>${esc(e?e.name:x.id)}</td><td>${x.r.in||'-'}</td><td>${x.r.out||'-'}${x.r.nx?' (+1)':''}</td><td class="neg">${x.p}</td><td>${can12(x.r)&&x.p.startsWith('مدة')?`<button data-a="fix12" data-p="${esc(k)}">انصراف مساءً (+12 س)</button>`:''}<button data-a="jump" data-p="${esc(k)}">تعديل</button><button data-a="fix" data-p="${esc(k)}" data-q="half">نصف يوم</button><button data-a="fix" data-p="${esc(k)}" data-q="absent">غياب</button><button data-a="fix" data-p="${esc(k)}" data-q="ok">سليم</button></td></tr>`}).join('')||'<tr><td colspan="6" class="hint">✓ لا توجد بصمات ناقصة في هذا الشهر</td></tr>'}</table></div>`;
 },
 adj(){
  const m=M(),L={bonus:'مكافأة',deduct:'خصم',advance:'سلفة'};
@@ -336,7 +336,7 @@ function zkRep(tk){
  Object.keys(G).forEach(k=>{
   const g=G[k],f=g[0],pm=f.h==12?1:f.ty=='in'?((f.h>=7&&f.h<=11&&!(nt[f.id]>=2&&f.h<=8))?0:1):(f.h<=8?0:1);
   let best;
-  for(const fi of [pm,1-pm]){let pv=-1,ok=1;const o=g.map((r,i)=>{const b=(r.h%12)*3600+r.m*60+r.s;const x=i?(b>=pv?b:b+43200>=pv?b+43200:(ok=0,pv)):b+fi*43200;pv=x;return x});if(!best)best=o;if(ok){best=o;break}}
+  for(const fi of [pm,1-pm]){let pv=-1,ok=1;const o=g.map((r,i)=>{const b=(r.h%12)*3600+r.m*60+r.s;const x=i?((b>=pv&&!(r.ty=='out'&&g[i-1].ty=='in'&&b-pv>30&&b-pv<7200))?b:b+43200>=pv?b+43200:(ok=0,pv)):b+fi*43200;pv=x;return x});if(!best)best=o;if(ok){best=o;break}}
   const q=k.split('|')[1].split('-'),base=Date.UTC(q[0],q[1]-1,q[2])/60000;
   g.forEach((r,i)=>(PU[r.id]=PU[r.id]||[]).push({t:base+best[i]/60,ty:r.ty}));
  });
@@ -466,6 +466,13 @@ function exportX(){
   ws['!cols']=h.map(()=>({wch:16}));XLSX.utils.book_append_sheet(wb,ws,'المرتبات '+m);wb.Workbook={Views:[{RTL:true}]};
   XLSX.writeFile(wb,'lion-auto-payroll-'+m+'.xlsx');msg('تم إنشاء ملف Excel.');
  }catch(e){msg('تعذر إنشاء ملف Excel. تأكد من الاتصال بالإنترنت وجرّب من نسخة GitHub أو من جهازك (التنزيل لا يعمل داخل بعض المعاينات).',1)}
+}
+const can12=r=>r.in&&r.out&&!r.nx&&tm(r.out)>=tm(r.in)&&tm(r.out)-tm(r.in)<120&&(tm(r.out)+720)%1440>tm(r.in),hmm=m=>pad(Math.floor(m/60))+':'+pad(m%60);
+function fix12(k){if(gl(k.split('|')[1]))return;const r=D.att[k];if(!r||!can12(r))return;const o=r.out;r.out=hmm((tm(o)+720)%1440);lg('تصحيح انصراف +12 ساعة',k.replace('|',' / '),o,r.out);save();R();msg('تم تصحيح الانصراف إلى '+r.out+'.')}
+async function fix12all(){
+ const ks=issues(M()).filter(x=>can12(x.r)&&!D.lock[x.date.slice(0,7)]).map(x=>x.k);if(!ks.length)return msg('لا توجد سجلات قابلة للتصحيح.',1);
+ if(!await ask('تحويل وقت الانصراف إلى المساء (+12 ساعة) في '+ks.length+' سجل؟ مثال: 07:13 ← 19:13. راجع القائمة قبل التأكيد.'))return;
+ ks.forEach(k=>{const r=D.att[k],o=r.out;r.out=hmm((tm(o)+720)%1440);lg('تصحيح انصراف +12 ساعة',k.replace('|',' / '),o,r.out)});save();R();msg('تم تصحيح '+ks.length+' سجل.');
 }
 async function rest(){try{const j=JSON.parse($('#bk').value),d=j.data||j;if(!Array.isArray(d.emp))throw 0;const o=migrate(Object.assign({emp:[],att:{},adj:[]},d));if(!await ask('استبدال كل البيانات الحالية بالنص المُلصق ('+o.emp.length+' موظف)؟'))return;D=o;save();R();msg('تمت الاستعادة.')}catch(e){msg('النص غير صالح.',1)}}
 async function rfile(f){
